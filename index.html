@@ -6,7 +6,6 @@
     <title>Новогоднее Колесо Удачи</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Подключаем библиотеку для праздничного салюта/конфетти -->
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         body {
@@ -15,27 +14,28 @@
         }
         .wheel-container {
             position: relative;
-            width: 300px;
-            height: 300px;
+            width: 280px;
+            height: 280px;
         }
         canvas {
             width: 100%;
             height: 100%;
             border-radius: 50%;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            border: 4px solid #f59e0b;
         }
         .pointer {
             position: absolute;
-            top: -15px;
+            top: -20px;
             left: 50%;
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 25px solid #ef4444;
+            border-left: 14px solid transparent;
+            border-right: 14px solid transparent;
+            border-top: 26px solid #ef4444;
             z-index: 10;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+            filter: drop-shadow(0 3px 5px rgba(0,0,0,0.4));
         }
     </style>
 </head>
@@ -43,7 +43,7 @@
 
     <!-- Шапка -->
     <header class="w-full max-w-md flex justify-between items-center py-2">
-        <h1 class="text-xl font-bold tracking-wider text-amber-400">🎄 КОЛЕСО УДАЧИ</h1>
+        <h1 class="text-lg font-bold tracking-wider text-amber-400">🎄 КОЛЕСО УДАЧИ</h1>
         <button id="adminBtn" class="hidden bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-full border border-amber-500/30 text-amber-300 transition">
             ⚙️ Админка
         </button>
@@ -51,26 +51,26 @@
 
     <!-- Основной контент (Колесо) -->
     <main class="flex flex-col items-center justify-center my-auto">
-        <div class="wheel-container my-6">
+        <div class="wheel-container my-4">
             <div class="pointer"></div>
             <canvas id="wheelCanvas" width="600" height="600"></canvas>
         </div>
 
         <!-- Поле промокода -->
-        <div id="promoSection" class="w-full max-w-xs mb-4">
+        <div id="promoSection" class="w-full max-w-xs mb-3">
             <input type="text" id="promoInput" placeholder="Введите промокод (необязательно)" 
-                   class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-center text-sm uppercase tracking-widest placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-amber-400 transition">
+                   class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-center text-sm uppercase tracking-widest placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-amber-400 transition">
         </div>
 
         <!-- Кнопка вращения -->
-        <button id="spinBtn" class="w-full max-w-xs bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition duration-200">
+        <button id="spinBtn" class="w-full max-w-xs bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition duration-200">
             КРУТИТЬ КОЛЕСО 🎁
         </button>
     </main>
 
     <!-- Модальное окно выигрыша -->
     <div id="winModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
-        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl animate-in fade-in zoom-in duration-200">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl">
             <div class="text-5xl mb-3" id="winIcon">🎉</div>
             <h2 class="text-xl font-bold mb-1 text-amber-400">Поздравляем!</h2>
             <p class="text-slate-300 text-sm mb-6">Вы выиграли: <span id="winPrizeText" class="font-bold text-white"></span></p>
@@ -80,7 +80,7 @@
         </div>
     </div>
 
-    <!-- Админ-панель (Выдвижная панель / Дровер) -->
+    <!-- Админ-панель -->
     <div id="settingsDrawer" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex-col z-50 p-4 overflow-y-auto">
         <div class="max-w-md w-full mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-5 my-auto shadow-2xl">
             <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
@@ -88,17 +88,13 @@
                 <button id="closeAdminBtn" class="text-slate-400 hover:text-white text-xl px-2">✕</button>
             </div>
 
-            <!-- Статистика и призы -->
             <div class="mb-4">
-                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Настройка призов, шансов и статистика побед:</label>
-                <div id="prizesEditorList" class="space-y-3 max-h-60 overflow-y-auto pr-1">
-                    <!-- Заполняется динамически -->
-                </div>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Настройка призов и статистика:</label>
+                <div id="prizesEditorList" class="space-y-3 max-h-60 overflow-y-auto pr-1"></div>
             </div>
 
-            <!-- Промокоды -->
             <div class="mb-4">
-                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Активные промокоды (через запятую):</label>
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Промокоды (через запятую):</label>
                 <input type="text" id="promosEditorInput" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
             </div>
 
@@ -112,7 +108,6 @@
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // ⚠️ ЗАМЕНИТЕ НА ВШУ АМВЕРА ССЫЛКУ ЕСЛИ ОТЛИЧАЕТСЯ
         const API_URL = "https://year-wheel-bot-ric01.msk1.amvera.tech/api/settings";
         const ADMIN_ID = 7008640180;
 
@@ -121,13 +116,13 @@
             validPromos: ["NEWYEAR2027", "SNOW2027", "XMAS", "GIFT", "SANTA"],
             prizes: [
                 { label: "Скидка 15%", icon: "🎄", chance: 30, wins: 0 },
-                { label: "Чашка какао", icon: "☕", "chance": 25, wins: 0 },
-                { label: "Подарок-сюрприз", icon: "🎁", "chance": 15, wins: 0 },
-                { label: "Кэшбэк 500₽", icon: "✨", "chance": 10, "wins": 0 },
-                { label: "Скидка 25%", icon: "⭐", "chance": 10, "wins": 0 },
-                { label: "+300 бонусов", icon: "❄️", "chance": 6, "wins": 0 },
-                { label: "Билет на елку", icon: "🎟️", "chance": 3, "wins": 0 },
-                { label: "СУПЕРПРИЗ", icon: "🎅", "chance": 1, "wins": 0 }
+                { label: "Чашка какао", icon: "☕", chance: 25, wins: 0 },
+                { label: "Подарок-сюрприз", icon: "🎁", chance: 15, wins: 0 },
+                { label: "Кэшбэк 500₽", icon: "✨", chance: 10, wins: 0 },
+                { label: "Скидка 25%", icon: "⭐", chance: 10, wins: 0 },
+                { label: "+300 бонусов", icon: "❄️", chance: 6, wins: 0 },
+                { label: "Билет на елку", icon: "🎟️", chance: 3, wins: 0 },
+                { label: "СУПЕРПРИЗ", icon: "🎅", chance: 1, wins: 0 }
             ]
         };
 
@@ -150,33 +145,16 @@
         let isSpinning = false;
         let selectedPrizeResult = null;
 
-        // Показываем кнопку админа если совпадает ID
         if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id === ADMIN_ID) {
             adminBtn.classList.remove('hidden');
         }
 
-        // Загрузка настроек с сервера
-        async function loadSettingsFromServer() {
-            try {
-                const res = await fetch(API_URL);
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.prizes) state.prizes = data.prizes;
-                    if (data.validPromos) state.validPromos = data.validPromos;
-                    if (data.currentTheme) state.currentTheme = data.currentTheme;
-                }
-            } catch (e) {
-                console.log("Используются локальные настройки (ошибка сети)");
-            }
-            drawWheel();
-        }
+        const wheelColors = ['#b91c1c', '#15803d', '#b45309', '#1d4ed8', '#7e22ce', '#be185d', '#0e7490', '#c2410c'];
 
-        // Отрисовка колеса
         function drawWheel() {
             const prizes = state.prizes;
             const totalSlices = prizes.length;
             const arcSize = (2 * Math.PI) / totalSlices;
-            const colors = ['#1e293b', '#334155', '#1e293b', '#334155', '#1e293b', '#334155', '#1e293b', '#334155'];
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -184,25 +162,55 @@
                 const angle = i * arcSize + currentAngle;
                 
                 ctx.beginPath();
-                ctx.fillStyle = colors[i % colors.length];
+                ctx.fillStyle = wheelColors[i % wheelColors.length];
                 ctx.moveTo(300, 300);
                 ctx.arc(300, 300, 300, angle, angle + arcSize);
                 ctx.lineTo(300, 300);
                 ctx.fill();
-                ctx.save();
 
-                // Текст и иконка на секторе
+                ctx.strokeStyle = "#ffffff";
+                ctx.lineWidth = 2;
+                ctx.stroke();
+
+                ctx.save();
                 ctx.translate(300, 300);
                 ctx.rotate(angle + arcSize / 2);
                 ctx.textAlign = "right";
                 ctx.fillStyle = "#ffffff";
-                ctx.font = "bold 22px sans-serif";
-                ctx.fillText(`${prize.icon} ${prize.label}`, 270, 10);
+                ctx.font = "bold 20px sans-serif";
+                
+                let labelText = `${prize.icon} ${prize.label}`;
+                if (labelText.length > 16) labelText = labelText.substring(0, 15) + '..';
+                
+                ctx.fillText(labelText, 260, 8);
                 ctx.restore();
             });
         }
 
-        // Выбор приза по шансам
+        // Отрисовываем колесо СРАЗУ, не дожидаясь сети
+        drawWheel();
+
+        // Фоновая загрузка настроек с сервера с таймаутом
+        async function loadSettingsFromServer() {
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                const res = await fetch(API_URL, { signal: controller.signal });
+                clearTimeout(timeoutId);
+                
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.prizes && Array.isArray(data.prizes)) state.prizes = data.prizes;
+                    if (data.validPromos) state.validPromos = data.validPromos;
+                    if (data.currentTheme) state.currentTheme = data.currentTheme;
+                    drawWheel(); // перерисовываем с новыми данными от сервера
+                }
+            } catch (e) {
+                console.log("Сервер занят или недоступен, работаем на локальных настройках");
+            }
+        }
+        loadSettingsFromServer();
+
         function getWeightedPrize() {
             const totalChance = state.prizes.reduce((sum, p) => sum + p.chance, 0);
             let randomNum = Math.random() * totalChance;
@@ -216,7 +224,6 @@
             return { prize: state.prizes[0], index: 0 };
         }
 
-        // Вращение колеса
         spinBtn.addEventListener('click', () => {
             if (isSpinning) return;
             isSpinning = true;
@@ -229,20 +236,17 @@
             const totalSlices = state.prizes.length;
             const arcSize = (2 * Math.PI) / totalSlices;
             
-            // Рассчитываем угол остановки
             const targetAngle = 1.5 * Math.PI - (index * arcSize + arcSize / 2);
-            const spins = 5; // количество оборотов
+            const spins = 5;
             const totalRotation = spins * 2 * Math.PI + targetAngle - (currentAngle % (2 * Math.PI));
 
             const startAngle = currentAngle;
             const startTime = performance.now();
-            const duration = 4000; // 4 секунды
+            const duration = 4000;
 
             function animate(currentTime) {
                 const elapsed = currentTime - startTime;
                 const progress = Math.min(elapsed / duration, 1);
-                
-                // Плавное замедление (easeOut)
                 const easeOut = 1 - Math.pow(1 - progress, 3);
                 currentAngle = startAngle + totalRotation * easeOut;
                 
@@ -255,14 +259,12 @@
                     spinBtn.disabled = false;
                     spinBtn.classList.remove('opacity-50');
 
-                    // Запуск салюта конфетти при победе
                     confetti({
-                        particleCount: 100,
-                        spread: 70,
+                        particleCount: 120,
+                        spread: 80,
                         origin: { y: 0.6 }
                     });
 
-                    // Показываем окно выигрыша
                     winIcon.textContent = prize.icon;
                     winPrizeText.textContent = prize.label;
                     winModal.classList.remove('hidden');
@@ -273,7 +275,6 @@
             requestAnimationFrame(animate);
         });
 
-        // Отправка данных боту
         claimBtn.addEventListener('click', () => {
             if (!selectedPrizeResult) return;
             const promo = promoInput.value.trim().toUpperCase();
@@ -284,11 +285,14 @@
                 promo: promo || null
             };
 
-            tg.sendData(JSON.stringify(dataToSend));
+            if (tg.sendData) {
+                tg.sendData(JSON.stringify(dataToSend));
+            } else {
+                alert("Ошибка: приложение запущено вне чата Telegram.");
+            }
             tg.close();
         });
 
-        // Открытие админки
         adminBtn.addEventListener('click', () => {
             prizesEditorList.innerHTML = '';
             state.prizes.forEach((p, idx) => {
@@ -300,7 +304,7 @@
                         </div>
                         <div class="flex justify-between items-center text-xs text-slate-400">
                             <span>Шанс (%): <input type="number" value="${p.chance}" data-idx="${idx}" data-field="chance" class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-center"></span>
-                            <span class="bg-slate-900 px-2 py-1 rounded-lg text-amber-300 font-medium">Выигрышей: ${p.wins || 0}</span>
+                            <span class="bg-slate-900 px-2 py-1 rounded-lg text-amber-300 font-medium">Побед: ${p.wins || 0}</span>
                         </div>
                     </div>
                 `;
@@ -315,7 +319,6 @@
             settingsDrawer.classList.remove('flex');
         });
 
-        // Сохранение настроек из админки
         applySettingsBtn.addEventListener('click', async () => {
             const chanceInputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
             chanceInputs.forEach(inp => {
@@ -349,19 +352,16 @@
                     })
                 });
                 if (res.ok) {
-                    alert('✅ Настройки успешно сохранены и синхронизированы!');
+                    alert('✅ Настройки сохранены!');
                     settingsDrawer.classList.add('hidden');
                     settingsDrawer.classList.remove('flex');
                 } else {
-                    alert('❌ Ошибка сохранения на сервере.');
+                    alert('❌ Ошибка сервера.');
                 }
             } catch (e) {
-                alert('❌ Не удалось подключиться к серверу Amvera.');
+                alert('❌ Нет связи с сервером.');
             }
         });
-
-        // Запуск при загрузке страницы
-        loadSettingsFromServer();
     </script>
 </body>
 </html>
