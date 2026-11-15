@@ -3,852 +3,343 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Новогоднее Колесо Удачи — Telegram Mini App</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Новогоднее Колесо Удачи</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
-    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Подключаем библиотеку для праздничного салюта/конфетти -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root {
-            --bg-primary: #0a1128;
-            --bg-secondary: #101c3f;
-            --accent-glow: rgba(239, 68, 68, 0.45);
-            --accent-main: #dc2626;
-            --accent-secondary: #f59e0b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-primary);
-            color: var(--text-main);
-            overflow-x: hidden;
             user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            transition: background-color 0.4s ease, color 0.4s ease;
+            -webkit-user-select: none;
         }
-
-        h1, h2, .font-display {
-            font-family: 'Montserrat', sans-serif;
+        .wheel-container {
+            position: relative;
+            width: 300px;
+            height: 300px;
         }
-
-        .wheel-aura {
-            box-shadow: 0 0 50px var(--accent-glow), inset 0 0 25px rgba(255, 255, 255, 0.2);
-            transition: box-shadow 0.4s ease;
+        canvas {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
         }
-
-        @keyframes tickerBounce {
-            0% { transform: translateX(-50%) rotate(0deg); }
-            40% { transform: translateX(-50%) rotate(-24deg); }
-            100% { transform: translateX(-50%) rotate(0deg); }
-        }
-
-        .ticker-tick {
-            animation: tickerBounce 0.12s cubic-bezier(0.22, 1, 0.36, 1);
-        }
-
-        @keyframes shakeInput {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-6px); }
-            40%, 80% { transform: translateX(6px); }
-        }
-
-        .shake-error {
-            animation: shakeInput 0.35s ease-in-out;
-        }
-
-        @keyframes modalPop {
-            0% { opacity: 0; transform: scale(0.85) translateY(20px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-
-        .modal-animate {
-            animation: modalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-
-        ::-webkit-scrollbar {
-            width: 5px;
-        }
-        ::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
+        .pointer {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #ef4444;
+            z-index: 10;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col items-center justify-between relative">
+<body class="bg-slate-900 text-white min-h-screen flex flex-col items-center justify-between p-4 font-sans">
 
-    <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+    <!-- Шапка -->
+    <header class="w-full max-w-md flex justify-between items-center py-2">
+        <h1 class="text-xl font-bold tracking-wider text-amber-400">🎄 КОЛЕСО УДАЧИ</h1>
+        <button id="adminBtn" class="hidden bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-full border border-amber-500/30 text-amber-300 transition">
+            ⚙️ Админка
+        </button>
+    </header>
 
-    <div class="w-full max-w-md mx-auto min-h-screen flex flex-col justify-between px-4 py-4 sm:py-6 relative z-10">
-        
-        <header class="flex items-center justify-between w-full mb-2">
-            <div class="flex items-center gap-2.5">
-                <div id="brandBadge" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 via-rose-500 to-amber-400 flex items-center justify-center shadow-lg shadow-red-600/30">
-                    <span class="text-xl">🎄</span>
-                </div>
-                <div>
-                    <h1 class="font-display font-extrabold text-base sm:text-lg leading-tight tracking-tight text-amber-200">НОВОГОДНЯЯ СКАЗКА</h1>
-                    <p id="subTitleText" class="text-xs text-slate-300">Крутите колесо и забирайте подарки!</p>
-                </div>
-            </div>
+    <!-- Основной контент (Колесо) -->
+    <main class="flex flex-col items-center justify-center my-auto">
+        <div class="wheel-container my-6">
+            <div class="pointer"></div>
+            <canvas id="wheelCanvas" width="600" height="600"></canvas>
+        </div>
 
-            <div class="flex items-center gap-2">
-                <button id="soundToggleBtn" title="Звук" class="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 transition border border-white/10 backdrop-blur-md">
-                    <svg id="soundOnIcon" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
-                    </svg>
-                    <svg id="soundOffIcon" class="w-5 h-5 text-slate-400 hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
-                    </svg>
-                </button>
+        <!-- Поле промокода -->
+        <div id="promoSection" class="w-full max-w-xs mb-4">
+            <input type="text" id="promoInput" placeholder="Введите промокод (необязательно)" 
+                   class="w-full px-4 py-2 bg-slate-800 border border-slate-700 rounded-xl text-center text-sm uppercase tracking-widest placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-amber-400 transition">
+        </div>
 
-                <button id="openSettingsBtn" class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 transition border border-white/10 backdrop-blur-md text-xs font-semibold text-amber-300">
-                    <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
-                    </svg>
-                    <span>Тема</span>
-                </button>
-            </div>
-        </header>
+        <!-- Кнопка вращения -->
+        <button id="spinBtn" class="w-full max-w-xs bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition duration-200">
+            КРУТИТЬ КОЛЕСО 🎁
+        </button>
+    </main>
 
-        <main class="flex flex-col items-center justify-center my-auto py-2">
-            <div class="relative w-[300px] h-[300px] sm:w-[340px] sm:h-[340px] flex items-center justify-center">
-                <div id="wheelGlowRing" class="absolute inset-1 rounded-full wheel-aura pointer-events-none"></div>
-
-                <div id="wheelPointer" class="absolute -top-4 left-1/2 -translate-x-1/2 z-30 origin-top drop-shadow-[0_6px_12px_rgba(220,38,38,0.7)]">
-                    <svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M21 48L4.5 16.5C1.5 10.5 5.8 3 12.6 3H29.4C36.2 3 40.5 10.5 37.5 16.5L21 48Z" fill="url(#newYearPointerGrad)" stroke="#FEF08A" stroke-width="2.5"/>
-                        <circle cx="21" cy="14" r="5" fill="#FFFFFF"/>
-                        <defs>
-                            <linearGradient id="newYearPointerGrad" x1="21" y1="3" x2="21" y2="48" gradientUnits="userSpaceOnUse">
-                                <stop stop-color="#EF4444"/>
-                                <stop offset="1" stop-color="#991B1B"/>
-                            </linearGradient>
-                        </defs>
-                    </svg>
-                </div>
-
-                <canvas id="wheelCanvas" class="w-full h-full rounded-full relative z-10 cursor-pointer"></canvas>
-
-                <button id="centerSpinTrigger" aria-label="Крутить колесо" class="absolute z-20 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-b from-amber-300 via-amber-500 to-amber-700 p-1 shadow-[0_0_25px_rgba(245,158,11,0.6)] active:scale-95 transition-transform flex items-center justify-center group">
-                    <div class="w-full h-full rounded-full bg-slate-950 flex flex-col items-center justify-center border border-amber-300/60">
-                        <span class="font-display font-black text-[11px] sm:text-xs tracking-wider text-amber-300 group-hover:scale-105 transition-transform">ПУСК</span>
-                    </div>
-                </button>
-            </div>
-        </main>
-
-        <section id="controlCard" class="w-full rounded-3xl bg-slate-900/80 border border-red-500/30 backdrop-blur-xl p-4 sm:p-5 shadow-2xl transition-colors duration-300">
-            
-            <div class="flex items-center justify-between mb-2.5">
-                <label for="promoInput" class="text-xs font-semibold uppercase tracking-wider text-amber-200/90">
-                    Новогодний промокод
-                </label>
-                <button id="fillDemoBtn" type="button" class="text-xs font-medium text-amber-400 hover:text-amber-300 underline decoration-dashed underline-offset-4 transition">
-                    Вставить промокод
-                </button>
-            </div>
-
-            <div id="inputWrapper" class="relative mb-3">
-                <input 
-                    id="promoInput" 
-                    type="text" 
-                    maxlength="20"
-                    placeholder="Введите код" 
-                    autocomplete="off"
-                    class="w-full bg-slate-950/80 border border-white/15 focus:border-amber-400 focus:ring-2 focus:ring-amber-500/30 rounded-2xl px-4 py-3.5 text-center font-display font-bold text-base sm:text-lg tracking-widest uppercase text-white placeholder:text-slate-500 placeholder:font-normal placeholder:tracking-normal placeholder:text-sm outline-none transition"
-                >
-                <div id="promoStatusBadge" class="hidden absolute right-3 top-1/2 -translate-y-1/2 px-2 py-0.5 rounded-lg text-[11px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                    ОК
-                </div>
-            </div>
-
-            <p id="statusMessage" class="text-center text-xs text-slate-300 mb-3 min-h-[16px] transition-all">
-                Введите праздничный код из чека или рассылки
-            </p>
-
-            <button 
-                id="spinActionBtn" 
-                type="button"
-                class="w-full py-4 px-5 rounded-2xl font-display font-extrabold text-sm sm:text-base uppercase tracking-wider text-white bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 hover:brightness-110 active:scale-[0.98] transition-all shadow-lg shadow-red-600/40 flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none"
-            >
-                <span class="text-lg">🎁</span>
-                <span id="spinBtnLabel">Испытать новогоднюю удачу</span>
-            </button>
-
-            <button 
-                id="demoTestSpinBtn" 
-                type="button"
-                class="w-full mt-2.5 py-2 px-3 rounded-xl text-xs font-medium text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 transition flex items-center justify-center gap-1.5"
-            >
-                <span>✨ Тестовый запуск (без промокода)</span>
-            </button>
-        </section>
-    </div>
-
-    <div id="winModal" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-        <div class="w-full max-w-sm rounded-3xl bg-slate-900 border border-amber-400/40 p-6 text-center shadow-2xl modal-animate relative overflow-hidden">
-            <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-56 h-56 bg-red-500/30 rounded-full blur-3xl pointer-events-none"></div>
-
-            <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gradient-to-tr from-amber-400 to-red-500 flex items-center justify-center text-3xl shadow-lg shadow-amber-500/30">
-                <span id="winModalIcon">🎅</span>
-            </div>
-
-            <span class="inline-block px-3 py-1 rounded-full bg-red-500/20 text-red-300 text-xs font-bold uppercase tracking-wider mb-2 border border-red-500/30">
-                С Новым Годом!
-            </span>
-
-            <h2 class="font-display font-black text-xl sm:text-2xl text-white mb-1">
-                Ваш новогодний приз:
-            </h2>
-
-            <div id="winPrizeBox" class="my-4 py-3.5 px-4 rounded-2xl bg-white/10 border border-amber-400/40">
-                <p id="winPrizeTitle" class="font-display font-extrabold text-lg sm:text-xl text-amber-300">
-                    Подарок 20%
-                </p>
-                <p id="winPromoUsed" class="text-xs text-slate-300 mt-1">
-                    Промокод: NEWYEAR2027 активирован
-                </p>
-            </div>
-
-            <p class="text-xs text-slate-300 mb-5 leading-relaxed">
-                Подарок успешно закреплен за вашим аккаунтом. Нажмите кнопку ниже, чтобы отправить купон в чат.
-            </p>
-
-            <button 
-                id="claimPrizeBtn" 
-                type="button"
-                class="w-full py-3.5 px-5 rounded-2xl font-display font-bold text-sm uppercase tracking-wider text-slate-950 bg-gradient-to-r from-amber-300 via-amber-400 to-yellow-500 hover:brightness-105 active:scale-95 transition shadow-lg shadow-amber-500/25"
-            >
-                Забрать подарок
+    <!-- Модальное окно выигрыша -->
+    <div id="winModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
+        <div class="bg-slate-800 border border-slate-700 w-full max-w-sm rounded-3xl p-6 text-center shadow-2xl animate-in fade-in zoom-in duration-200">
+            <div class="text-5xl mb-3" id="winIcon">🎉</div>
+            <h2 class="text-xl font-bold mb-1 text-amber-400">Поздравляем!</h2>
+            <p class="text-slate-300 text-sm mb-6">Вы выиграли: <span id="winPrizeText" class="font-bold text-white"></span></p>
+            <button id="claimBtn" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl shadow-lg transition">
+                Забрать приз в Telegram 🚀
             </button>
         </div>
     </div>
 
-    <div id="settingsDrawer" class="fixed inset-0 z-40 hidden flex-col justify-end bg-black/75 backdrop-blur-sm">
-        <div class="w-full max-w-md mx-auto bg-slate-900 border-t border-white/20 rounded-t-3xl p-5 max-h-[85vh] flex flex-col shadow-2xl modal-animate">
-            
-            <div class="flex items-center justify-between pb-3 border-b border-white/10">
-                <div>
-                    <h3 class="font-display font-bold text-base text-amber-200">Админ-панель управления</h3>
-                    <p class="text-xs text-slate-300">Настройка призов, шансов и промокодов</p>
-                </div>
-                <button id="closeSettingsBtn" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/>
-                    </svg>
-                </button>
+    <!-- Админ-панель (Выдвижная панель / Дровер) -->
+    <div id="settingsDrawer" class="fixed inset-0 bg-black/80 backdrop-blur-md hidden flex-col z-50 p-4 overflow-y-auto">
+        <div class="max-w-md w-full mx-auto bg-slate-900 border border-slate-800 rounded-3xl p-5 my-auto shadow-2xl">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <h2 class="font-bold text-lg text-amber-400">⚙️ Управление колесом</h2>
+                <button id="closeAdminBtn" class="text-slate-400 hover:text-white text-xl px-2">✕</button>
             </div>
 
-            <div class="overflow-y-auto py-4 space-y-5 pr-1">
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2.5">
-                        Цветовая палитра
-                    </label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button type="button" data-theme="newyear" class="theme-selector-btn p-2.5 rounded-2xl border-2 border-red-500 bg-slate-950 text-center transition">
-                            <div class="w-6 h-6 mx-auto mb-1 rounded-full bg-gradient-to-tr from-red-600 to-amber-400"></div>
-                            <span class="text-xs font-semibold block text-white">Зимняя Сказка</span>
-                        </button>
-                        <button type="button" data-theme="gold" class="theme-selector-btn p-2.5 rounded-2xl border border-white/15 bg-stone-950 text-center transition">
-                            <div class="w-6 h-6 mx-auto mb-1 rounded-full bg-gradient-to-tr from-amber-400 to-yellow-600"></div>
-                            <span class="text-xs font-semibold block text-white">Золотое Сияние</span>
-                        </button>
-                        <button type="button" data-theme="emerald" class="theme-selector-btn p-2.5 rounded-2xl border border-white/15 bg-slate-950 text-center transition">
-                            <div class="w-6 h-6 mx-auto mb-1 rounded-full bg-gradient-to-tr from-emerald-500 to-teal-400"></div>
-                            <span class="text-xs font-semibold block text-white">Елочная Ветка</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- БЛОК УПРАВЛЕНИЯ ПРОМОКОДАМИ -->
-                <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-2">
-                        Активные промокоды
-                    </label>
-                    <div class="flex gap-2 mb-3">
-                        <input id="newPromoInput" type="text" placeholder="НОВЫЙ КОД" maxlength="20" class="flex-1 bg-slate-950 border border-white/15 rounded-xl px-3 py-2 text-xs uppercase font-bold text-amber-300 outline-none focus:border-amber-400">
-                        <button id="addPromoBtn" type="button" class="px-4 py-2 bg-gradient-to-r from-red-600 to-amber-500 text-white font-bold text-xs rounded-xl hover:brightness-110 active:scale-95 transition">Добавить</button>
-                    </div>
-                    <div id="promosEditorList" class="space-y-1.5 max-h-36 overflow-y-auto pr-1"></div>
-                </div>
-
-                <div>
-                    <div class="flex items-center justify-between mb-2">
-                        <label class="text-xs font-bold uppercase tracking-wider text-slate-300">
-                            Призы и шансы (<span id="totalChanceBadge" class="text-emerald-400">100%</span>)
-                        </label>
-                        <div class="flex items-center gap-3">
-                            <button id="equalizeChancesBtn" type="button" class="text-xs text-sky-400 hover:underline">
-                                Поровну
-                            </button>
-                            <button id="resetPrizesBtn" type="button" class="text-xs text-amber-400 hover:underline">
-                                Сбросить
-                            </button>
-                        </div>
-                    </div>
-                    <div id="chanceWarning" class="hidden mb-2 px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs">
-                        Сумма процентов должна быть равна 100%!
-                    </div>
-                    <div id="prizesEditorList" class="space-y-2"></div>
+            <!-- Статистика и призы -->
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Настройка призов, шансов и статистика побед:</label>
+                <div id="prizesEditorList" class="space-y-3 max-h-60 overflow-y-auto pr-1">
+                    <!-- Заполняется динамически -->
                 </div>
             </div>
 
-            <div class="pt-3 border-t border-white/10">
-                <button id="applySettingsBtn" type="button" class="w-full py-3.5 rounded-2xl font-display font-bold text-sm uppercase tracking-wider text-white bg-gradient-to-r from-red-600 to-amber-500 hover:brightness-110 active:scale-95 transition">
-                    Применить и сохранить
-                </button>
+            <!-- Промокоды -->
+            <div class="mb-4">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Активные промокоды (через запятую):</label>
+                <input type="text" id="promosEditorInput" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-amber-400">
             </div>
+
+            <button id="applySettingsBtn" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl shadow-lg transition">
+                Сохранить и применить для всех 💾
+            </button>
         </div>
     </div>
 
     <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // ⚠️ ЗАМЕНИТЕ НА ВШУ АМВЕРА ССЫЛКУ ЕСЛИ ОТЛИЧАЕТСЯ
         const API_URL = "https://year-wheel-bot-ric01.msk1.amvera.tech/api/settings";
-        const ADMIN_IDS = [7008640180];
-
-        function isUserAdmin() {
-            const tgUser = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe 
-                ? window.Telegram.WebApp.initDataUnsafe.user 
-                : null;
-            return Boolean(tgUser && ADMIN_IDS.includes(tgUser.id));
-        }
-
-        const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
-        if (tg) {
-            try {
-                tg.ready();
-                tg.expand();
-            } catch (e) {}
-        }
-
-        const THEMES = {
-            newyear: {
-                name: 'Зимняя Сказка',
-                bgPrimary: '#0a1128',
-                accentGlow: 'rgba(239, 68, 68, 0.5)',
-                rimOuter: '#dc2626',
-                rimInner: '#f59e0b',
-                btnGradient: 'from-red-600 via-rose-600 to-amber-500',
-                sectors: [
-                    { bg: '#991b1b', text: '#ffffff' },
-                    { bg: '#1e293b', text: '#fca5a5' },
-                    { bg: '#047857', text: '#ffffff' },
-                    { bg: '#1e293b', text: '#fde047' },
-                    { bg: '#b91c1c', text: '#ffffff' },
-                    { bg: '#1e293b', text: '#6ee7b7' },
-                    { bg: '#065f46', text: '#ffffff' },
-                    { bg: '#f59e0b', text: '#0a1128' }
-                ]
-            },
-            gold: {
-                name: 'Золотое Сияние',
-                bgPrimary: '#12100e',
-                accentGlow: 'rgba(245, 158, 11, 0.5)',
-                rimOuter: '#fbbf24',
-                rimInner: '#b45309',
-                btnGradient: 'from-amber-500 via-yellow-500 to-amber-600',
-                sectors: [
-                    { bg: '#1c1917', text: '#fcd34d' },
-                    { bg: '#b45309', text: '#ffffff' },
-                    { bg: '#292524', text: '#fde68a' },
-                    { bg: '#d97706', text: '#ffffff' },
-                    { bg: '#1c1917', text: '#fcd34d' },
-                    { bg: '#92400e', text: '#ffffff' },
-                    { bg: '#292524', text: '#fde68a' },
-                    { bg: '#f59e0b', text: '#1c1917' }
-                ]
-            },
-            emerald: {
-                name: 'Елочная Ветка',
-                bgPrimary: '#061a14',
-                accentGlow: 'rgba(16, 185, 129, 0.5)',
-                rimOuter: '#10b981',
-                rimInner: '#047857',
-                btnGradient: 'from-emerald-600 via-teal-600 to-amber-500',
-                sectors: [
-                    { bg: '#065f46', text: '#ffffff' },
-                    { bg: '#022c22', text: '#6ee7b7' },
-                    { bg: '#047857', text: '#ffffff' },
-                    { bg: '#022c22', text: '#fde047' },
-                    { bg: '#059669', text: '#ffffff' },
-                    { bg: '#022c22', text: '#34d399' },
-                    { bg: '#065f46', text: '#ffffff' },
-                    { bg: '#f59e0b', text: '#061a14' }
-                ]
-            }
-        };
-
-        const DEFAULT_PRIZES = [
-            { label: 'Скидка 15%', icon: '🎄', chance: 30, wins: 0 },
-            { label: 'Чашка какао', icon: '☕', chance: 25, wins: 0 },
-            { label: 'Подарок-сюрприз', icon: '🎁', chance: 15, wins: 0 },
-            { label: 'Кэшбэк 500₽', icon: '✨', chance: 10, wins: 0 },
-            { label: 'Скидка 25%', icon: '⭐', chance: 10, wins: 0 },
-            { label: '+300 бонусов', icon: '❄️', chance: 6, wins: 0 },
-            { label: 'Билет на елку', icon: '🎟️', chance: 3, wins: 0 },
-            { label: 'СУПЕРПРИЗ', icon: '🎅', chance: 1, wins: 0 }
-        ];
+        const ADMIN_ID = 7008640180;
 
         let state = {
-            currentTheme: 'newyear',
-            prizes: JSON.parse(JSON.stringify(DEFAULT_PRIZES)),
-            validPromos: ['NEWYEAR2027', 'SNOW2027', 'XMAS', 'GIFT', 'SANTA'],
-            currentAngle: 0,
-            isSpinning: false,
-            soundEnabled: true,
-            usedPromos: new Set(),
-            lastUsedPromo: null
+            currentTheme: "newyear",
+            validPromos: ["NEWYEAR2027", "SNOW2027", "XMAS", "GIFT", "SANTA"],
+            prizes: [
+                { label: "Скидка 15%", icon: "🎄", chance: 30, wins: 0 },
+                { label: "Чашка какао", icon: "☕", "chance": 25, wins: 0 },
+                { label: "Подарок-сюрприз", icon: "🎁", "chance": 15, wins: 0 },
+                { label: "Кэшбэк 500₽", icon: "✨", "chance": 10, "wins": 0 },
+                { label: "Скидка 25%", icon: "⭐", "chance": 10, "wins": 0 },
+                { label: "+300 бонусов", icon: "❄️", "chance": 6, "wins": 0 },
+                { label: "Билет на елку", icon: "🎟️", "chance": 3, "wins": 0 },
+                { label: "СУПЕРПРИЗ", icon: "🎅", "chance": 1, "wins": 0 }
+            ]
         };
 
-        const wheelCanvas = document.getElementById('wheelCanvas');
-        const ctx = wheelCanvas.getContext('2d');
-        const wheelPointer = document.getElementById('wheelPointer');
-        const promoInput = document.getElementById('promoInput');
-        const inputWrapper = document.getElementById('inputWrapper');
-        const statusMessage = document.getElementById('statusMessage');
-        const promoStatusBadge = document.getElementById('promoStatusBadge');
-        const spinActionBtn = document.getElementById('spinActionBtn');
-        const demoTestSpinBtn = document.getElementById('demoTestSpinBtn');
-        const centerSpinTrigger = document.getElementById('centerSpinTrigger');
-        const fillDemoBtn = document.getElementById('fillDemoBtn');
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        const spinBtn = document.getElementById('spinBtn');
         const winModal = document.getElementById('winModal');
-        const winModalIcon = document.getElementById('winModalIcon');
-        const winPrizeTitle = document.getElementById('winPrizeTitle');
-        const winPromoUsed = document.getElementById('winPromoUsed');
-        const claimPrizeBtn = document.getElementById('claimPrizeBtn');
-
-        let audioCtx = null;
-
-        function initAudio() {
-            try {
-                if (!audioCtx) {
-                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                    if (AudioContextClass) audioCtx = new AudioContextClass();
-                }
-                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
-            } catch (e) {}
-        }
-
-        function playTickSound() {
-            if (!state.soundEnabled) return;
-            try {
-                initAudio();
-                if (!audioCtx) return;
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(650, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(180, audioCtx.currentTime + 0.045);
-                gain.gain.setValueAtTime(0.18, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.045);
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.05);
-            } catch (e) {}
-        }
-
-        function playWinFanfare() {
-            if (!state.soundEnabled) return;
-            try {
-                initAudio();
-                if (!audioCtx) return;
-                const notes = [523.25, 659.25, 783.99, 1046.50];
-                notes.forEach((freq, idx) => {
-                    const osc = audioCtx.createOscillator();
-                    const gain = audioCtx.createGain();
-                    osc.type = 'sine';
-                    const startTime = audioCtx.currentTime + idx * 0.09;
-                    osc.frequency.setValueAtTime(freq, startTime);
-                    gain.gain.setValueAtTime(0.2, startTime);
-                    gain.gain.exponentialRampToValueAtTime(0.001, startTime + 0.45);
-                    osc.connect(gain);
-                    gain.connect(audioCtx.destination);
-                    osc.start(startTime);
-                    osc.stop(startTime + 0.46);
-                });
-            } catch (e) {}
-        }
-
-        function setupCanvasResolution() {
-            const rect = wheelCanvas.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 2;
-            wheelCanvas.width = rect.width * dpr;
-            wheelCanvas.height = rect.height * dpr;
-            ctx.setTransform(1, 0, 0, 1, 0, 0);
-            ctx.scale(dpr, dpr);
-            drawWheel();
-        }
-
-        function drawWheel() {
-            const rect = wheelCanvas.getBoundingClientRect();
-            const width = rect.width;
-            const height = rect.height;
-            if (!width || !height) return;
-
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const outerRadius = Math.min(centerX, centerY) - 4;
-            const rimThickness = 12;
-            const wheelRadius = outerRadius - rimThickness;
-
-            const theme = THEMES[state.currentTheme];
-            const numSectors = state.prizes.length;
-            const arcSize = (2 * Math.PI) / numSectors;
-
-            ctx.clearRect(0, 0, width, height);
-
-            ctx.save();
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, outerRadius, 0, 2 * Math.PI);
-            const rimGrad = ctx.createLinearGradient(0, 0, width, height);
-            rimGrad.addColorStop(0, theme.rimOuter);
-            rimGrad.addColorStop(0.5, '#fde047');
-            rimGrad.addColorStop(1, theme.rimInner);
-            ctx.fillStyle = rimGrad;
-            ctx.fill();
-            ctx.restore();
-
-            const baseOffset = -Math.PI / 2;
-
-            for (let i = 0; i < numSectors; i++) {
-                const startAngle = baseOffset + state.currentAngle + i * arcSize;
-                const endAngle = startAngle + arcSize;
-                const sectorStyle = theme.sectors[i % theme.sectors.length];
-
-                ctx.save();
-                ctx.beginPath();
-                ctx.moveTo(centerX, centerY);
-                ctx.arc(centerX, centerY, wheelRadius, startAngle, endAngle);
-                ctx.closePath();
-                ctx.fillStyle = sectorStyle.bg;
-                ctx.fill();
-
-                ctx.lineWidth = 1.5;
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-                ctx.stroke();
-                ctx.restore();
-
-                ctx.save();
-                const midAngle = startAngle + arcSize / 2;
-                ctx.translate(centerX, centerY);
-                ctx.rotate(midAngle);
-
-                ctx.font = '18px Inter, sans-serif';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                ctx.fillText(state.prizes[i].icon || '🎁', wheelRadius * 0.80, 0);
-
-                ctx.fillStyle = sectorStyle.text;
-                ctx.font = '700 11px Montserrat, sans-serif';
-                ctx.textAlign = 'right';
-                ctx.textBaseline = 'middle';
-
-                drawWrappedSectorText(ctx, state.prizes[i].label, wheelRadius * 0.67, 0, wheelRadius * 0.42, 12);
-                ctx.restore();
-            }
-
-            const dotCount = 16;
-            for (let j = 0; j < dotCount; j++) {
-                const dotAngle = (j * 2 * Math.PI) / dotCount + state.currentAngle * 0.5;
-                const dotX = centerX + Math.cos(dotAngle) * (outerRadius - rimThickness / 2);
-                const dotY = centerY + Math.sin(dotAngle) * (outerRadius - rimThickness / 2);
-
-                ctx.beginPath();
-                ctx.arc(dotX, dotY, 2.5, 0, 2 * Math.PI);
-                ctx.fillStyle = j % 2 === 0 ? '#ffffff' : '#fef08a';
-                ctx.fill();
-            }
-        }
-
-        function drawWrappedSectorText(context, text, x, y, maxWidth, lineHeight) {
-            const words = String(text || '').split(' ');
-            if (words.length <= 1 || context.measureText(text).width <= maxWidth) {
-                context.fillText(text, x, y);
-                return;
-            }
-            const mid = Math.ceil(words.length / 2);
-            context.fillText(words.slice(0, mid).join(' '), x, y - lineHeight / 2);
-            context.fillText(words.slice(mid).join(' '), x, y + lineHeight / 2);
-        }
-
-        function pickWeightedWinnerIndex() {
-            let totalChance = 0;
-            state.prizes.forEach(prize => {
-                totalChance += Math.max(0, parseFloat(prize.chance) || 0);
-            });
-
-            if (totalChance <= 0) return 0;
-
-            let randomVal = Math.random() * totalChance;
-            let currentSum = 0;
-
-            for (let i = 0; i < state.prizes.length; i++) {
-                currentSum += Math.max(0, parseFloat(state.prizes[i].chance) || 0);
-                if (randomVal <= currentSum) return i;
-            }
-            return state.prizes.length - 1;
-        }
-
-        function startSpin(promoCodeUsed = null) {
-            if (state.isSpinning) return;
-
-            state.isSpinning = true;
-            state.lastUsedPromo = promoCodeUsed;
-            setControlsLocked(true);
-            initAudio();
-
-            if (tg && tg.HapticFeedback) {
-                try { tg.HapticFeedback.impactOccurred('medium'); } catch (e) {}
-            }
-
-            const numSectors = state.prizes.length;
-            const arcSize = (2 * Math.PI) / numSectors;
-            
-            const winningIndex = pickWeightedWinnerIndex();
-            state.prizes[winningIndex].wins = (state.prizes[winningIndex].wins || 0) + 1;
-
-            const sectorCenterOffset = winningIndex * arcSize + arcSize / 2;
-            const currentNormalized = ((state.currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
-            const targetNormalized = (2 * Math.PI - sectorCenterOffset) % (2 * Math.PI);
-
-            let deltaAngle = targetNormalized - currentNormalized;
-            if (deltaAngle <= 0) deltaAngle += 2 * Math.PI;
-
-            const extraSpins = (6 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
-            const jitter = (Math.random() - 0.5) * (arcSize * 0.35);
-            const totalRotation = extraSpins + deltaAngle + jitter;
-
-            const startAngle = state.currentAngle;
-            const duration = 4500;
-            const startTime = performance.now();
-            let lastSectorPassed = Math.floor(startAngle / arcSize);
-
-            function animateFrame(now) {
-                const elapsed = now - startTime;
-                const progress = Math.min(elapsed / duration, 1);
-                const easeOut = 1 - Math.pow(1 - progress, 4);
-                state.currentAngle = startAngle + totalRotation * easeOut;
-
-                const currentSectorPassed = Math.floor(state.currentAngle / arcSize);
-                if (currentSectorPassed !== lastSectorPassed) {
-                    lastSectorPassed = currentSectorPassed;
-                    triggerPointerTick();
-                }
-
-                drawWheel();
-
-                if (progress < 1) {
-                    requestAnimationFrame(animateFrame);
-                } else {
-                    state.isSpinning = false;
-                    setControlsLocked(false);
-
-                    if (promoCodeUsed) {
-                        state.usedPromos.add(promoCodeUsed);
-                        promoInput.value = '';
-                        promoStatusBadge.classList.add('hidden');
-                        statusMessage.textContent = `Промокод ${promoCodeUsed} успешно применен!`;
-                        statusMessage.className = 'text-center text-xs text-emerald-400 mb-3 min-h-[16px]';
-                    }
-
-                    handleWin(state.prizes[winningIndex], promoCodeUsed);
-                }
-            }
-
-            requestAnimationFrame(animateFrame);
-        }
-
-        function triggerPointerTick() {
-            wheelPointer.classList.remove('ticker-tick');
-            void wheelPointer.offsetWidth;
-            wheelPointer.classList.add('ticker-tick');
-            playTickSound();
-            if (tg && tg.HapticFeedback) {
-                try { tg.HapticFeedback.selectionChanged(); } catch (e) {}
-            }
-        }
-
-        function handleWin(prize, promoCodeUsed) {
-            playWinFanfare();
-            launchConfetti();
-
-            if (tg && tg.HapticFeedback) {
-                try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {}
-            }
-
-            winModalIcon.textContent = prize.icon || '🎁';
-            winPrizeTitle.textContent = prize.label;
-            winPromoUsed.textContent = promoCodeUsed 
-                ? `Промокод: ${promoCodeUsed} активирован` 
-                : 'Тестовый запуск (демо-режим)';
-
-            setTimeout(() => {
-                winModal.classList.remove('hidden');
-                winModal.classList.add('flex');
-            }, 350);
-        }
-
-        function validateAndSpin() {
-            if (state.isSpinning) return;
-            const rawCode = promoInput.value.trim().toUpperCase();
-
-            if (!rawCode) {
-                showInputError('Введите промокод для запуска');
-                return;
-            }
-
-            if (state.usedPromos.has(rawCode)) {
-                showInputError(`Промокод ${rawCode} уже был использован!`);
-                return;
-            }
-
-            if (!state.validPromos.includes(rawCode)) {
-                showInputError('Неверный или недействительный промокод');
-                return;
-            }
-
-            statusMessage.textContent = `Код ${rawCode} принят! Счастливого вращения!`;
-            statusMessage.className = 'text-center text-xs text-emerald-400 mb-3 min-h-[16px]';
-            startSpin(rawCode);
-        }
-
-        function showInputError(msg) {
-            statusMessage.textContent = msg;
-            statusMessage.className = 'text-center text-xs text-rose-400 font-medium mb-3 min-h-[16px]';
-            inputWrapper.classList.remove('shake-error');
-            void inputWrapper.offsetWidth;
-            inputWrapper.classList.add('shake-error');
-            if (tg && tg.HapticFeedback) {
-                try { tg.HapticFeedback.notificationOccurred('error'); } catch (e) {}
-            }
-        }
-
-        function setControlsLocked(locked) {
-            spinActionBtn.disabled = locked;
-            if (demoTestSpinBtn) demoTestSpinBtn.disabled = locked;
-            promoInput.disabled = locked;
-            if (fillDemoBtn) fillDemoBtn.disabled = locked;
-        }
-
-        const confettiCanvas = document.getElementById('confettiCanvas');
-        const cCtx = confettiCanvas.getContext('2d');
-        let confettiParticles = [];
-        let snowParticles = [];
-
-        function initSnow() {
-            confettiCanvas.width = window.innerWidth;
-            confettiCanvas.height = window.innerHeight;
-            snowParticles = [];
-            const count = 75;
-            for (let i = 0; i < count; i++) {
-                snowParticles.push({
-                    x: Math.random() * confettiCanvas.width,
-                    y: Math.random() * confettiCanvas.height,
-                    radius: Math.random() * 2.8 + 1,
-                    speed: Math.random() * 1.2 + 0.4,
-                    wind: (Math.random() - 0.5) * 0.6,
-                    opacity: Math.random() * 0.7 + 0.3,
-                    angle: Math.random() * Math.PI * 2,
-                    spinSpeed: Math.random() * 0.03 - 0.015
-                });
-            }
-        }
-
-        function launchConfetti() {
-            const colors = ['#dc2626', '#ef4444', '#f59e0b', '#fbbf24', '#10b981', '#ffffff', '#38bdf8'];
-            for (let i = 0; i < 120; i++) {
-                confettiParticles.push({
-                    x: confettiCanvas.width / 2 + (Math.random() - 0.5) * 120,
-                    y: confettiCanvas.height * 0.45,
-                    vx: (Math.random() - 0.5) * 15,
-                    vy: (Math.random() - 1.2) * 16 - 4,
-                    size: Math.random() * 7 + 4,
-                    color: colors[Math.floor(Math.random() * colors.length)],
-                    rotation: Math.random() * 360,
-                    rotSpeed: (Math.random() - 0.5) * 12
-                });
-            }
-        }
-
-        function updateAnimationLoop() {
-            cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
-
-            snowParticles.forEach(p => {
-                p.y += p.speed;
-                p.angle += p.spinSpeed;
-                p.x += p.wind + Math.sin(p.angle) * 0.4;
-
-                if (p.y > confettiCanvas.height + 10) {
-                    p.y = -10;
-                    p.x = Math.random() * confettiCanvas.width;
-                }
-                if (p.x > confettiCanvas.width + 10) p.x = -10;
-                if (p.x < -10) p.x = confettiCanvas.width + 10;
-
-                cCtx.save();
-                cCtx.globalAlpha = p.opacity;
-                cCtx.fillStyle = '#ffffff';
-                cCtx.beginPath();
-                cCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-                cCtx.fill();
-                cCtx.restore();
-            });
-
-            for (let index = confettiParticles.length - 1; index >= 0; index--) {
-                const p = confettiParticles[index];
-                p.x += p.vx;
-                p.y += p.vy;
-                p.vy += 0.38;
-                p.vx *= 0.99;
-                p.rotation += p.rotSpeed;
-
-                if (p.y < confettiCanvas.height + 20) {
-                    cCtx.save();
-                    cCtx.translate(p.x, p.y);
-                    cCtx.rotate((p.rotation * Math.PI) / 180);
-                    cCtx.fillStyle = p.color;
-                    cCtx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size * 0.6);
-                    cCtx.restore();
-                } else {
-                    confettiParticles.splice(index, 1);
-                }
-            }
-
-            requestAnimationFrame(updateAnimationLoop);
-        }
-
+        const winPrizeText = document.getElementById('winPrizeText');
+        const winIcon = document.getElementById('winIcon');
+        const claimBtn = document.getElementById('claimBtn');
+        const adminBtn = document.getElementById('adminBtn');
         const settingsDrawer = document.getElementById('settingsDrawer');
+        const closeAdminBtn = document.getElementById('closeAdminBtn');
+        const applySettingsBtn = document.getElementById('applySettingsBtn');
         const prizesEditorList = document.getElementById('prizesEditorList');
-        const promosEditorList = document.getElementById('promosEditorList');
+        const promosEditorInput = document.getElementById('promosEditorInput');
+        const promoInput = document.getElementById('promoInput');
 
-        // ЗАГРУЗКА НАСТРОЕК С СЕРВЕРА
+        let currentAngle = 0;
+        let isSpinning = false;
+        let selectedPrizeResult = null;
+
+        // Показываем кнопку админа если совпадает ID
+        if (tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.id === ADMIN_ID) {
+            adminBtn.classList.remove('hidden');
+        }
+
+        // Загрузка настроек с сервера
         async function loadSettingsFromServer() {
             try {
                 const res = await fetch(API_URL);
                 if (res.ok) {
                     const data = await res.json();
-                    if (data.currentTheme) applyTheme(data.currentTheme);
-                    if (data.validPromos) state.validPromos = data.validPromos;
                     if (data.prizes) state.prizes = data.prizes;
-                    drawWheel();
+                    if (data.validPromos) state.validPromos = data.validPromos;
+                    if (data.currentTheme) state.currentTheme = data.currentTheme;
                 }
             } catch (e) {
-                console.log('Не удалось загрузить настройки с сервера');
+                console.log("Используются локальные настройки (ошибка сети)");
             }
+            drawWheel();
         }
 
-        // СОХРАНЕНИЕ НАСТРОЕК НА СЕРВЕР
-        async function saveSettingsToServer() {
+        // Отрисовка колеса
+        function drawWheel() {
+            const prizes = state.prizes;
+            const totalSlices = prizes.length;
+            const arcSize = (2 * Math.PI) / totalSlices;
+            const colors = ['#1e293b', '#334155', '#1e293b', '#334155', '#1e293b', '#334155', '#1e293b', '#334155'];
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            prizes.forEach((prize, i) => {
+                const angle = i * arcSize + currentAngle;
+                
+                ctx.beginPath();
+                ctx.fillStyle = colors[i % colors.length];
+                ctx.moveTo(300, 300);
+                ctx.arc(300, 300, 300, angle, angle + arcSize);
+                ctx.lineTo(300, 300);
+                ctx.fill();
+                ctx.save();
+
+                // Текст и иконка на секторе
+                ctx.translate(300, 300);
+                ctx.rotate(angle + arcSize / 2);
+                ctx.textAlign = "right";
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 22px sans-serif";
+                ctx.fillText(`${prize.icon} ${prize.label}`, 270, 10);
+                ctx.restore();
+            });
+        }
+
+        // Выбор приза по шансам
+        function getWeightedPrize() {
+            const totalChance = state.prizes.reduce((sum, p) => sum + p.chance, 0);
+            let randomNum = Math.random() * totalChance;
+            
+            for (let i = 0; i < state.prizes.length; i++) {
+                if (randomNum < state.prizes[i].chance) {
+                    return { prize: state.prizes[i], index: i };
+                }
+                randomNum -= state.prizes[i].chance;
+            }
+            return { prize: state.prizes[0], index: 0 };
+        }
+
+        // Вращение колеса
+        spinBtn.addEventListener('click', () => {
+            if (isSpinning) return;
+            isSpinning = true;
+            spinBtn.disabled = true;
+            spinBtn.classList.add('opacity-50');
+
+            const { prize, index } = getWeightedPrize();
+            selectedPrizeResult = prize;
+
+            const totalSlices = state.prizes.length;
+            const arcSize = (2 * Math.PI) / totalSlices;
+            
+            // Рассчитываем угол остановки
+            const targetAngle = 1.5 * Math.PI - (index * arcSize + arcSize / 2);
+            const spins = 5; // количество оборотов
+            const totalRotation = spins * 2 * Math.PI + targetAngle - (currentAngle % (2 * Math.PI));
+
+            const startAngle = currentAngle;
+            const startTime = performance.now();
+            const duration = 4000; // 4 секунды
+
+            function animate(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                // Плавное замедление (easeOut)
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                currentAngle = startAngle + totalRotation * easeOut;
+                
+                drawWheel();
+
+                if (progress < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    isSpinning = false;
+                    spinBtn.disabled = false;
+                    spinBtn.classList.remove('opacity-50');
+
+                    // Запуск салюта конфетти при победе
+                    confetti({
+                        particleCount: 100,
+                        spread: 70,
+                        origin: { y: 0.6 }
+                    });
+
+                    // Показываем окно выигрыша
+                    winIcon.textContent = prize.icon;
+                    winPrizeText.textContent = prize.label;
+                    winModal.classList.remove('hidden');
+                    winModal.classList.add('flex');
+                }
+            }
+
+            requestAnimationFrame(animate);
+        });
+
+        // Отправка данных боту
+        claimBtn.addEventListener('click', () => {
+            if (!selectedPrizeResult) return;
+            const promo = promoInput.value.trim().toUpperCase();
+
+            const dataToSend = {
+                action: "prize_claimed",
+                prize: selectedPrizeResult.label,
+                promo: promo || null
+            };
+
+            tg.sendData(JSON.stringify(dataToSend));
+            tg.close();
+        });
+
+        // Открытие админки
+        adminBtn.addEventListener('click', () => {
+            prizesEditorList.innerHTML = '';
+            state.prizes.forEach((p, idx) => {
+                prizesEditorList.innerHTML += `
+                    <div class="bg-slate-800/80 p-3 rounded-2xl border border-slate-700/60 flex flex-col gap-2">
+                        <div class="flex items-center gap-2">
+                            <input type="text" value="${p.icon}" data-idx="${idx}" data-field="icon" class="w-12 bg-slate-900 border border-slate-700 rounded-lg text-center py-1 text-sm">
+                            <input type="text" value="${p.label}" data-idx="${idx}" data-field="label" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1 text-sm">
+                        </div>
+                        <div class="flex justify-between items-center text-xs text-slate-400">
+                            <span>Шанс (%): <input type="number" value="${p.chance}" data-idx="${idx}" data-field="chance" class="w-16 bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-white text-center"></span>
+                            <span class="bg-slate-900 px-2 py-1 rounded-lg text-amber-300 font-medium">Выигрышей: ${p.wins || 0}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            promosEditorInput.value = state.validPromos.join(', ');
+            settingsDrawer.classList.remove('hidden');
+            settingsDrawer.classList.add('flex');
+        });
+
+        closeAdminBtn.addEventListener('click', () => {
+            settingsDrawer.classList.add('hidden');
+            settingsDrawer.classList.remove('flex');
+        });
+
+        // Сохранение настроек из админки
+        applySettingsBtn.addEventListener('click', async () => {
+            const chanceInputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
+            chanceInputs.forEach(inp => {
+                const idx = parseInt(inp.dataset.idx, 10);
+                state.prizes[idx].chance = Math.max(0, parseFloat(inp.value) || 0);
+            });
+            const labelInputs = prizesEditorList.querySelectorAll('input[data-field="label"]');
+            labelInputs.forEach(inp => {
+                const idx = parseInt(inp.dataset.idx, 10);
+                if (inp.value.trim()) state.prizes[idx].label = inp.value.trim();
+            });
+            const iconInputs = prizesEditorList.querySelectorAll('input[data-field="icon"]');
+            iconInputs.forEach(inp => {
+                const idx = parseInt(inp.dataset.idx, 10);
+                if (inp.value.trim()) state.prizes[idx].icon = inp.value.trim();
+            });
+
+            const promosArr = promosEditorInput.value.split(',').map(s => s.trim().toUpperCase()).filter(Boolean);
+            state.validPromos = promosArr;
+
+            drawWheel();
+
             try {
-                await fetch(API_URL, {
+                const res = await fetch(API_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -857,279 +348,20 @@
                         prizes: state.prizes
                     })
                 });
-            } catch (e) {
-                console.log('Не удалось сохранить настройки на сервер');
-            }
-        }
-
-        function updateTotalChanceUI() {
-            const chanceInputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
-            let total = 0;
-            chanceInputs.forEach(inp => {
-                const val = String(inp.value).replace(',', '.');
-                total += parseFloat(val) || 0;
-            });
-            total = Math.round(total * 100) / 100;
-
-            const badge = document.getElementById('totalChanceBadge');
-            const warning = document.getElementById('chanceWarning');
-            const applyBtn = document.getElementById('applySettingsBtn');
-
-            badge.textContent = `${total}%`;
-            if (Math.abs(total - 100) < 0.01) {
-                badge.className = 'text-emerald-400 font-extrabold';
-                warning.classList.add('hidden');
-                applyBtn.disabled = false;
-                applyBtn.classList.remove('opacity-50', 'pointer-events-none');
-            } else {
-                badge.className = 'text-rose-400 font-extrabold';
-                warning.textContent = `Сумма процентов сейчас ${total}%. Должно быть ровно 100%!`;
-                warning.classList.remove('hidden');
-                applyBtn.disabled = true;
-                applyBtn.classList.add('opacity-50', 'pointer-events-none');
-            }
-        }
-
-        function renderPromosEditor() {
-            promosEditorList.innerHTML = '';
-            state.validPromos.forEach((code, index) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center justify-between bg-white/5 px-3 py-2 rounded-xl border border-white/10';
-                row.innerHTML = `
-                    <span class="font-mono font-bold text-xs text-amber-300 uppercase">${code}</span>
-                    <button type="button" data-promo-idx="${index}" class="delete-promo-btn text-rose-400 hover:text-rose-300 text-xs font-bold px-2 py-1 rounded bg-rose-500/10 hover:bg-rose-500/25 transition">Удалить</button>
-                `;
-                promosEditorList.appendChild(row);
-            });
-
-            promosEditorList.querySelectorAll('.delete-promo-btn').forEach(btn => {
-                btn.addEventListener('click', (e) => {
-                    const idx = parseInt(e.target.dataset.promoIdx, 10);
-                    state.validPromos.splice(idx, 1);
-                    renderPromosEditor();
-                });
-            });
-        }
-
-        document.getElementById('addPromoBtn').addEventListener('click', () => {
-            const newCodeInput = document.getElementById('newPromoInput');
-            const code = newCodeInput.value.trim().toUpperCase();
-            if (code && !state.validPromos.includes(code)) {
-                state.validPromos.push(code);
-                newCodeInput.value = '';
-                renderPromosEditor();
-            }
-        });
-
-        function renderPrizesEditor() {
-            renderPromosEditor();
-            prizesEditorList.innerHTML = '';
-            state.prizes.forEach((prize, index) => {
-                const row = document.createElement('div');
-                row.className = 'flex items-center gap-1.5 bg-white/5 p-2 rounded-xl border border-white/10';
-                row.innerHTML = `
-                    <span class="w-4 text-center text-xs font-bold text-slate-400">${index + 1}</span>
-                    <div class="relative flex items-center w-16 shrink-0">
-                        <input type="number" min="0" max="100" step="0.5" data-idx="${index}" data-field="chance" value="${prize.chance}" 
-                            class="w-full bg-slate-950 border border-amber-400/40 rounded-lg pl-2 pr-5 py-1.5 text-xs font-bold text-amber-300 outline-none focus:border-amber-400 text-right">
-                        <span class="absolute right-1.5 text-[10px] font-bold text-slate-400 pointer-events-none">%</span>
-                    </div>
-                    <input type="text" data-idx="${index}" data-field="icon" value="${prize.icon}" maxlength="2" 
-                        class="w-9 shrink-0 text-center bg-slate-950 border border-white/15 rounded-lg py-1.5 text-sm outline-none focus:border-amber-400">
-                    <input type="text" data-idx="${index}" data-field="label" value="${prize.label}" maxlength="24" 
-                        class="flex-1 min-w-0 bg-slate-950 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white outline-none focus:border-amber-400">
-                    <span title="Сколько раз выпало" class="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-slate-300 font-mono shrink-0">
-                        ${prize.wins || 0}×
-                    </span>
-                `;
-                prizesEditorList.appendChild(row);
-            });
-
-            prizesEditorList.querySelectorAll('input[data-field="chance"]').forEach(inp => {
-                inp.addEventListener('input', updateTotalChanceUI);
-            });
-            updateTotalChanceUI();
-        }
-
-        function applyTheme(themeKey) {
-            state.currentTheme = themeKey;
-            const theme = THEMES[themeKey];
-
-            document.documentElement.style.setProperty('--bg-primary', theme.bgPrimary);
-            document.documentElement.style.setProperty('--accent-glow', theme.accentGlow);
-
-            spinActionBtn.className = `w-full py-4 px-5 rounded-2xl font-display font-extrabold text-sm sm:text-base uppercase tracking-wider text-white bg-gradient-to-r ${theme.btnGradient} hover:brightness-110 active:scale-[0.98] transition-all shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:pointer-events-none`;
-
-            document.querySelectorAll('.theme-selector-btn').forEach(btn => {
-                if (btn.dataset.theme === themeKey) {
-                    btn.classList.add('border-2', 'border-red-500');
-                    btn.classList.remove('border', 'border-white/15');
+                if (res.ok) {
+                    alert('✅ Настройки успешно сохранены и синхронизированы!');
+                    settingsDrawer.classList.add('hidden');
+                    settingsDrawer.classList.remove('flex');
                 } else {
-                    btn.classList.remove('border-2', 'border-red-500');
-                    btn.classList.add('border', 'border-white/15');
+                    alert('❌ Ошибка сохранения на сервере.');
                 }
-            });
-
-            drawWheel();
-        }
-
-        if (fillDemoBtn) {
-            fillDemoBtn.addEventListener('click', () => {
-                if (!isUserAdmin()) return;
-                promoInput.value = state.validPromos[0] || 'NEWYEAR2027';
-                promoStatusBadge.classList.remove('hidden');
-                statusMessage.textContent = 'Промокод вставлен! Нажмите кнопку запуска';
-                statusMessage.className = 'text-center text-xs text-emerald-400 mb-3 min-h-[16px]';
-            });
-        }
-
-        promoInput.addEventListener('input', () => {
-            const val = promoInput.value.trim().toUpperCase();
-            if (val.length >= 4 && !state.usedPromos.has(val)) {
-                promoStatusBadge.classList.remove('hidden');
-            } else {
-                promoStatusBadge.classList.add('hidden');
+            } catch (e) {
+                alert('❌ Не удалось подключиться к серверу Amvera.');
             }
         });
 
-        spinActionBtn.addEventListener('click', validateAndSpin);
-
-        centerSpinTrigger.addEventListener('click', () => {
-            if (promoInput.value.trim().length > 0) {
-                validateAndSpin();
-            } else if (isUserAdmin()) {
-                startSpin(null);
-            } else {
-                showInputError('Введите промокод для запуска');
-            }
-        });
-
-        if (demoTestSpinBtn) {
-            demoTestSpinBtn.addEventListener('click', () => {
-                if (!isUserAdmin()) return;
-                startSpin(null);
-            });
-        }
-
-        claimPrizeBtn.addEventListener('click', () => {
-            winModal.classList.add('hidden');
-            winModal.classList.remove('flex');
-            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                try {
-                    tg.sendData(JSON.stringify({
-                        action: 'prize_claimed',
-                        prize: winPrizeTitle.textContent,
-                        promo: state.lastUsedPromo
-                    }));
-                } catch (e) {}
-            }
-        });
-
-        const soundToggleBtn = document.getElementById('soundToggleBtn');
-        const soundOnIcon = document.getElementById('soundOnIcon');
-        const soundOffIcon = document.getElementById('soundOffIcon');
-
-        soundToggleBtn.addEventListener('click', () => {
-            state.soundEnabled = !state.soundEnabled;
-            soundOnIcon.classList.toggle('hidden', !state.soundEnabled);
-            soundOffIcon.classList.toggle('hidden', state.soundEnabled);
-            if (state.soundEnabled) playTickSound();
-        });
-
-        const openSettingsBtn = document.getElementById('openSettingsBtn');
-        if (openSettingsBtn) {
-            openSettingsBtn.addEventListener('click', (e) => {
-                if (!isUserAdmin()) {
-                    e.stopImmediatePropagation();
-                    return;
-                }
-                renderPrizesEditor();
-                settingsDrawer.classList.remove('hidden');
-                settingsDrawer.classList.add('flex');
-            });
-        }
-
-        document.getElementById('closeSettingsBtn').addEventListener('click', () => {
-            settingsDrawer.classList.add('hidden');
-            settingsDrawer.classList.remove('flex');
-        });
-
-        document.querySelectorAll('.theme-selector-btn').forEach(btn => {
-            btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
-        });
-
-        document.getElementById('resetPrizesBtn').addEventListener('click', () => {
-            state.prizes = JSON.parse(JSON.stringify(DEFAULT_PRIZES));
-            renderPrizesEditor();
-            drawWheel();
-        });
-
-        document.getElementById('equalizeChancesBtn').addEventListener('click', () => {
-            const count = state.prizes.length;
-            const equalShare = Math.round((100 / count) * 100) / 100;
-            const chanceInputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
-            chanceInputs.forEach(inp => {
-                inp.value = equalShare;
-            });
-            updateTotalChanceUI();
-        });
-
-        document.getElementById('applySettingsBtn').addEventListener('click', async () => {
-            const inputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
-            inputs.forEach(inp => {
-                const idx = parseInt(inp.dataset.idx, 10);
-                const val = String(inp.value).replace(',', '.');
-                state.prizes[idx].chance = Math.max(0, parseFloat(val) || 0);
-            });
-            const textInputs = prizesEditorList.querySelectorAll('input[data-field="label"]');
-            textInputs.forEach(inp => {
-                const idx = parseInt(inp.dataset.idx, 10);
-                const val = inp.value.trim();
-                if (val) state.prizes[idx].label = val;
-            });
-            const iconInputs = prizesEditorList.querySelectorAll('input[data-field="icon"]');
-            iconInputs.forEach(inp => {
-                const idx = parseInt(inp.dataset.idx, 10);
-                const val = inp.value.trim();
-                if (val) state.prizes[idx].icon = val;
-            });
-
-            drawWheel();
-            settingsDrawer.classList.add('hidden');
-            settingsDrawer.classList.remove('flex');
-
-            await saveSettingsToServer();
-        });
-
-        function applyAdminVisibility() {
-            if (!isUserAdmin()) {
-                if (openSettingsBtn) openSettingsBtn.style.display = 'none';
-                if (fillDemoBtn) fillDemoBtn.style.display = 'none';
-                if (demoTestSpinBtn) demoTestSpinBtn.style.display = 'none';
-            }
-        }
-
-        async function initApp() {
-            applyAdminVisibility();
-            setupCanvasResolution();
-            initSnow();
-            updateAnimationLoop();
-            await loadSettingsFromServer();
-        }
-
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initApp);
-        } else {
-            initApp();
-        }
-
-        window.addEventListener('resize', () => {
-            setupCanvasResolution();
-            if (confettiCanvas) {
-                confettiCanvas.width = window.innerWidth;
-                confettiCanvas.height = window.innerHeight;
-            }
-        });
+        // Запуск при загрузке страницы
+        loadSettingsFromServer();
     </script>
 </body>
 </html>
