@@ -102,7 +102,7 @@ async def handle_web_app_data(message: Message):
         promo = data.get("promo")
 
         if action == "prize_claimed":
-            # Инкрементируем счетчик побед конкретного приза на сервере
+            # Инкрементируем счетчик побед на сервере
             settings = load_settings()
             for p in settings["prizes"]:
                 if p["label"] == prize:
@@ -110,29 +110,36 @@ async def handle_web_app_data(message: Message):
                     break
             save_settings(settings)
 
-            promo_text = f" (Промокод: {promo})" if promo else " (Тестовый запуск)"
+            promo_text = f" (Промокод: {promo})" if promo else " (Без промокода)"
             user = message.from_user
             user_mention = f"@{user.username}" if user.username else f"{user.first_name} (ID: {user.id})"
 
+            # Отправляем сообщение пользователю
             await message.answer(
                 f"🎉 Поздравляем! Ваш приз: <b>{prize}</b> успешно зафиксирован!{promo_text}\n\n"
-                f"Покажите это сообщение нашему сотруднику, чтобы забрать свой подарок.",
+                f"Покажите это сообщение нашему сотруднику, чтобы забрать подарок.",
                 parse_mode="HTML"
             )
 
+            # Безопасная отправка уведомления администратору
             admin_id = 7008640180
-            await bot.send_message(
-                chat_id=admin_id,
-                text=(
-                    f"🚨 <b>Новый выигрыш в колесе!</b>\n\n"
-                    f"👤 Игрок: {user_mention}\n"
-                    f"🎁 Выиграл приз: <b>{prize}</b>\n"
-                    f"🎟️ {promo_text}"
-                ),
-                parse_mode="HTML"
-            )
+            try:
+                await bot.send_message(
+                    chat_id=admin_id,
+                    text=(
+                        f"🚨 <b>Новый выигрыш в колесе!</b>\n\n"
+                        f"👤 Игрок: {user_mention}\n"
+                        f"🎁 Выиграл приз: <b>{prize}</b>\n"
+                        f"🎟️ {promo_text}"
+                    ),
+                    parse_mode="HTML"
+                )
+            except Exception as admin_err:
+                print(f"Не удалось отправить уведомление админу: {admin_err}")
+
     except Exception as e:
-        await message.answer(f"Произошла ошибка при обработке данных: {e}")
+        print(f"Ошибка в web_app_data: {e}")
+        await message.answer("Произошла ошибка при регистрации приза. Попробуйте еще раз.")
 
 async def main():
     logging.basicConfig(level=logging.INFO)
