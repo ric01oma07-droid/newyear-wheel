@@ -310,7 +310,9 @@
     </div>
 
     <script>
-        // ======= НАСТРОЙКА ПРАВ АДМИНИСТРАТОРА =======
+        // ======= НАСТРОЙКА СЕРВЕРА И АДМИНИСТРАТОРА =======
+        const API_URL = "https://year-wheel-bot-ric01.msk1.amvera.tech/api/settings";
+
         const ADMIN_IDS = [7008640180];
 
         function isUserAdmin() {
@@ -830,6 +832,37 @@
         const prizesEditorList = document.getElementById('prizesEditorList');
         const promosEditorList = document.getElementById('promosEditorList');
 
+        // ЗАГРУЗКА НАСТРОЕК С СЕРВЕРА
+        async function loadSettingsFromServer() {
+            try {
+                const res = await fetch(API_URL);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.validPromos) state.validPromos = data.validPromos;
+                    if (data.prizes) state.prizes = data.prizes;
+                    drawWheel();
+                }
+            } catch (e) {
+                console.log('Не удалось загрузить настройки с сервера');
+            }
+        }
+
+        // СОХРАНЕНИЕ НАСТРОЕК НА СЕРВЕР
+        async function saveSettingsToServer() {
+            try {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        validPromos: state.validPromos,
+                        prizes: state.prizes
+                    })
+                });
+            } catch (e) {
+                console.log('Не удалось сохранить настройки на сервер');
+            }
+        }
+
         function updateTotalChanceUI() {
             const chanceInputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
             let total = 0;
@@ -1042,7 +1075,7 @@
             updateTotalChanceUI();
         });
 
-        document.getElementById('applySettingsBtn').addEventListener('click', () => {
+        document.getElementById('applySettingsBtn').addEventListener('click', async () => {
             const inputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
             inputs.forEach(inp => {
                 const idx = parseInt(inp.dataset.idx, 10);
@@ -1065,6 +1098,9 @@
             drawWheel();
             settingsDrawer.classList.add('hidden');
             settingsDrawer.classList.remove('flex');
+
+            // Сохраняем настройки на сервере для всех пользователей
+            await saveSettingsToServer();
         });
 
         function applyAdminVisibility() {
@@ -1075,11 +1111,12 @@
             }
         }
 
-        function initApp() {
+        async function initApp() {
             applyAdminVisibility();
             setupCanvasResolution();
             initSnow();
             updateAnimationLoop();
+            await loadSettingsFromServer(); // Загружаем актуальные настройки при старте
         }
 
         if (document.readyState === 'loading') {
