@@ -2,7 +2,7 @@ import os
 import json
 import logging
 import asyncio
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Any
@@ -11,10 +11,8 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, W
 from aiogram.filters import CommandStart
 import uvicorn
 
-# Настройки
 TOKEN = os.getenv("BOT_TOKEN", "ВАШ_ТОКЕН_БОТА")
 
-# Сохранение в постоянное хранилище Amvera /data
 DATA_DIR = "/data" if os.path.exists("/data") else "."
 SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 
@@ -33,16 +31,26 @@ DEFAULT_SETTINGS = {
     ]
 }
 
+_settings_cache = None
+
 def load_settings():
+    global _settings_cache
+    if _settings_cache is not None:
+        return _settings_cache
+        
     if os.path.exists(SETTINGS_FILE):
         try:
             with open(SETTINGS_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                _settings_cache = json.load(f)
+                return _settings_cache
         except Exception:
             pass
-    return DEFAULT_SETTINGS
+    _settings_cache = DEFAULT_SETTINGS
+    return _settings_cache
 
 def save_settings(data):
+    global _settings_cache
+    _settings_cache = data
     os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
     with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
@@ -102,7 +110,6 @@ async def handle_web_app_data(message: Message):
         promo = data.get("promo")
 
         if action == "prize_claimed":
-            # Инкрементируем счетчик побед на сервере
             settings = load_settings()
             for p in settings["prizes"]:
                 if p["label"] == prize:
@@ -114,14 +121,16 @@ async def handle_web_app_data(message: Message):
             user = message.from_user
             user_mention = f"@{user.username}" if user.username else f"{user.first_name} (ID: {user.id})"
 
-            # Отправляем сообщение пользователю
+            # Отправляем сообщение пользователю в чат с призом
             await message.answer(
-                f"🎉 Поздравляем! Ваш приз: <b>{prize}</b> успешно зафиксирован!{promo_text}\n\n"
-                f"Покажите это сообщение нашему сотруднику, чтобы забрать подарок.",
+                f"🎉 <b>Поздравляем с выигрышем!</b>\n\n"
+                f"🎁 Ваш приз: <b>{prize}</b>\n"
+                f"🎟️ {promo_text}\n\n"
+                f"Покажите это сообщение нашему сотруднику, чтобы забрать подарок!",
                 parse_mode="HTML"
             )
 
-            # Безопасная отправка уведомления администратору
+            # Безопасное уведомление администратору
             admin_id = 7008640180
             try:
                 await bot.send_message(
