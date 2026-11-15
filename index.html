@@ -4,11 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Новогоднее Колесо Удачи — Telegram Mini App</title>
-    <!-- Подключение Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Подключение Telegram Web App SDK для нативной интеграции -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <!-- Подключение шрифтов Montserrat и Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
@@ -38,7 +35,6 @@
             font-family: 'Montserrat', sans-serif;
         }
 
-        /* Эффект зимнего праздничного свечения вокруг колеса */
         .wheel-aura {
             box-shadow: 0 0 50px var(--accent-glow), inset 0 0 25px rgba(255, 255, 255, 0.2);
             transition: box-shadow 0.4s ease;
@@ -88,13 +84,10 @@
 </head>
 <body class="min-h-screen flex flex-col items-center justify-between relative">
 
-    <!-- Канвас для эффектов падающего снега и конфетти -->
     <canvas id="confettiCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
 
-    <!-- Основной контейнер мобильного приложения -->
     <div class="w-full max-w-md mx-auto min-h-screen flex flex-col justify-between px-4 py-4 sm:py-6 relative z-10">
         
-        <!-- Шапка с новогодним логотипом -->
         <header class="flex items-center justify-between w-full mb-2">
             <div class="flex items-center gap-2.5">
                 <div id="brandBadge" class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 via-rose-500 to-amber-400 flex items-center justify-center shadow-lg shadow-red-600/30">
@@ -107,7 +100,6 @@
             </div>
 
             <div class="flex items-center gap-2">
-                <!-- Кнопка звука -->
                 <button id="soundToggleBtn" title="Звук" class="p-2.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 transition border border-white/10 backdrop-blur-md">
                     <svg id="soundOnIcon" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
@@ -117,7 +109,6 @@
                     </svg>
                 </button>
 
-                <!-- Кнопка настроек -->
                 <button id="openSettingsBtn" class="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 active:scale-95 transition border border-white/10 backdrop-blur-md text-xs font-semibold text-amber-300">
                     <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
@@ -127,14 +118,10 @@
             </div>
         </header>
 
-        <!-- Центральная секция: Новогоднее колесо фортуны -->
         <main class="flex flex-col items-center justify-center my-auto py-2">
             <div class="relative w-[300px] h-[300px] sm:w-[340px] sm:h-[340px] flex items-center justify-center">
-                
-                <!-- Праздничное внешнее свечение -->
                 <div id="wheelGlowRing" class="absolute inset-1 rounded-full wheel-aura pointer-events-none"></div>
 
-                <!-- Новогодний указатель -->
                 <div id="wheelPointer" class="absolute -top-4 left-1/2 -translate-x-1/2 z-30 origin-top drop-shadow-[0_6px_12px_rgba(220,38,38,0.7)]">
                     <svg width="42" height="50" viewBox="0 0 42 50" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M21 48L4.5 16.5C1.5 10.5 5.8 3 12.6 3H29.4C36.2 3 40.5 10.5 37.5 16.5L21 48Z" fill="url(#newYearPointerGrad)" stroke="#FEF08A" stroke-width="2.5"/>
@@ -148,10 +135,8 @@
                     </svg>
                 </div>
 
-                <!-- Canvas колеса -->
                 <canvas id="wheelCanvas" class="w-full h-full rounded-full relative z-10 cursor-pointer"></canvas>
 
-                <!-- Центральная кнопка запуска -->
                 <button id="centerSpinTrigger" aria-label="Крутить колесо" class="absolute z-20 w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gradient-to-b from-amber-300 via-amber-500 to-amber-700 p-1 shadow-[0_0_25px_rgba(245,158,11,0.6)] active:scale-95 transition-transform flex items-center justify-center group">
                     <div class="w-full h-full rounded-full bg-slate-950 flex flex-col items-center justify-center border border-amber-300/60">
                         <span class="font-display font-black text-[11px] sm:text-xs tracking-wider text-amber-300 group-hover:scale-105 transition-transform">ПУСК</span>
@@ -160,7 +145,6 @@
             </div>
         </main>
 
-        <!-- Нижняя панель управления -->
         <section id="controlCard" class="w-full rounded-3xl bg-slate-900/80 border border-red-500/30 backdrop-blur-xl p-4 sm:p-5 shadow-2xl transition-colors duration-300">
             
             <div class="flex items-center justify-between mb-2.5">
@@ -209,7 +193,6 @@
         </section>
     </div>
 
-    <!-- Модальное окно выигрыша -->
     <div id="winModal" class="fixed inset-0 z-40 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md">
         <div class="w-full max-w-sm rounded-3xl bg-slate-900 border border-amber-400/40 p-6 text-center shadow-2xl modal-animate relative overflow-hidden">
             <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-56 h-56 bg-red-500/30 rounded-full blur-3xl pointer-events-none"></div>
@@ -249,14 +232,13 @@
         </div>
     </div>
 
-    <!-- Выдвижная шторка настроек тем -->
     <div id="settingsDrawer" class="fixed inset-0 z-40 hidden flex-col justify-end bg-black/75 backdrop-blur-sm">
         <div class="w-full max-w-md mx-auto bg-slate-900 border-t border-white/20 rounded-t-3xl p-5 max-h-[85vh] flex flex-col shadow-2xl modal-animate">
             
             <div class="flex items-center justify-between pb-3 border-b border-white/10">
                 <div>
-                    <h3 class="font-display font-bold text-base text-amber-200">Выбор праздничной темы</h3>
-                    <p class="text-xs text-slate-300">Настройте визуальное оформление колеса</p>
+                    <h3 class="font-display font-bold text-base text-amber-200">Настройки колеса и шансов</h3>
+                    <p class="text-xs text-slate-300">Сектора равные, шансы настраиваются в %</p>
                 </div>
                 <button id="closeSettingsBtn" class="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-slate-300">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -289,11 +271,19 @@
                 <div>
                     <div class="flex items-center justify-between mb-2">
                         <label class="text-xs font-bold uppercase tracking-wider text-slate-300">
-                            Редактирование призов (8 шт.)
+                            Призы и шансы (<span id="totalChanceBadge" class="text-emerald-400">100%</span>)
                         </label>
-                        <button id="resetPrizesBtn" type="button" class="text-xs text-amber-400 hover:underline">
-                            Сбросить
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <button id="equalizeChancesBtn" type="button" class="text-xs text-sky-400 hover:underline">
+                                Поровну (12.5%)
+                            </button>
+                            <button id="resetPrizesBtn" type="button" class="text-xs text-amber-400 hover:underline">
+                                Сбросить
+                            </button>
+                        </div>
+                    </div>
+                    <div id="chanceWarning" class="hidden mb-2 px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-300 text-xs">
+                        Сумма процентов должна быть равна 100%!
                     </div>
                     <div id="prizesEditorList" class="space-y-2"></div>
                 </div>
@@ -308,10 +298,24 @@
     </div>
 
     <script>
-        const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+        // ======= НАСТРОЙКА ПРАВ АДМИНИСТРАТОРА =======
+        // Вставьте сюда ВАШ цифровой Telegram ID (узнать можно у @userinfobot)
+        const ADMIN_IDS = [123456789];
+
+        function isUserAdmin() {
+            const tgUser = window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe 
+                ? window.Telegram.WebApp.initDataUnsafe.user 
+                : null;
+            return Boolean(tgUser && ADMIN_IDS.includes(tgUser.id));
+        }
+        // ==============================================
+
+        const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
         if (tg) {
-            tg.ready();
-            tg.expand();
+            try {
+                tg.ready();
+                tg.expand();
+            } catch (e) {}
         }
 
         const THEMES = {
@@ -372,14 +376,14 @@
         };
 
         const DEFAULT_PRIZES = [
-            { label: 'Скидка 15%', icon: '🎄' },
-            { label: 'Чашка какао', icon: '☕' },
-            { label: 'Подарок-сюрприз', icon: '🎁' },
-            { label: 'Кэшбэк 500₽', icon: '✨' },
-            { label: 'Скидка 25%', icon: '⭐' },
-            { label: '+300 бонусов', icon: '❄️' },
-            { label: 'Билет на елку', icon: '🎟️' },
-            { label: 'СУПЕРПРИЗ', icon: '🎅' }
+            { label: 'Скидка 15%', icon: '🎄', chance: 30, wins: 0 },
+            { label: 'Чашка какао', icon: '☕', chance: 25, wins: 0 },
+            { label: 'Подарок-сюрприз', icon: '🎁', chance: 15, wins: 0 },
+            { label: 'Кэшбэк 500₽', icon: '✨', chance: 10, wins: 0 },
+            { label: 'Скидка 25%', icon: '⭐', chance: 10, wins: 0 },
+            { label: '+300 бонусов', icon: '❄️', chance: 6, wins: 0 },
+            { label: 'Билет на елку', icon: '🎟️', chance: 3, wins: 0 },
+            { label: 'СУПЕРПРИЗ', icon: '🎅', chance: 1, wins: 0 }
         ];
 
         const VALID_PROMOS = ['NEWYEAR2027', 'SNOW2027', 'XMAS', 'GIFT', 'SANTA'];
@@ -414,11 +418,13 @@
         let audioCtx = null;
 
         function initAudio() {
-            if (!audioCtx) {
-                const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                if (AudioContextClass) audioCtx = new AudioContextClass();
-            }
-            if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            try {
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) audioCtx = new AudioContextClass();
+                }
+                if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+            } catch (e) {}
         }
 
         function playTickSound() {
@@ -467,6 +473,7 @@
             const dpr = window.devicePixelRatio || 2;
             wheelCanvas.width = rect.width * dpr;
             wheelCanvas.height = rect.height * dpr;
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
             ctx.scale(dpr, dpr);
             drawWheel();
         }
@@ -475,6 +482,8 @@
             const rect = wheelCanvas.getBoundingClientRect();
             const width = rect.width;
             const height = rect.height;
+            if (!width || !height) return;
+
             const centerX = width / 2;
             const centerY = height / 2;
             const outerRadius = Math.min(centerX, centerY) - 4;
@@ -553,7 +562,7 @@
         }
 
         function drawWrappedSectorText(context, text, x, y, maxWidth, lineHeight) {
-            const words = text.split(' ');
+            const words = String(text || '').split(' ');
             if (words.length <= 1 || context.measureText(text).width <= maxWidth) {
                 context.fillText(text, x, y);
                 return;
@@ -561,6 +570,41 @@
             const mid = Math.ceil(words.length / 2);
             context.fillText(words.slice(0, mid).join(' '), x, y - lineHeight / 2);
             context.fillText(words.slice(mid).join(' '), x, y + lineHeight / 2);
+        }
+
+        function getRandomInt(max) {
+            if (window.crypto && typeof window.crypto.getRandomValues === 'function') {
+                try {
+                    const arr = new Uint32Array(1);
+                    window.crypto.getRandomValues(arr);
+                    return arr[0] % max;
+                } catch (e) {}
+            }
+            return Math.floor(Math.random() * max);
+        }
+
+        function pickWeightedWinnerIndex() {
+            const pool = [];
+            state.prizes.forEach((prize, index) => {
+                const chance = Math.max(0, parseFloat(prize.chance) || 0);
+                const ticketsCount = Math.round(chance * 10);
+                for (let t = 0; t < ticketsCount; t++) {
+                    pool.push(index);
+                }
+            });
+
+            if (pool.length === 0) {
+                return getRandomInt(state.prizes.length);
+            }
+
+            for (let i = pool.length - 1; i > 0; i--) {
+                const j = getRandomInt(i + 1);
+                const temp = pool[i];
+                pool[i] = pool[j];
+                pool[j] = temp;
+            }
+
+            return pool[getRandomInt(pool.length)];
         }
 
         function startSpin(promoCodeUsed = null) {
@@ -571,11 +615,15 @@
             setControlsLocked(true);
             initAudio();
 
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred('medium');
+            if (tg && tg.HapticFeedback) {
+                try { tg.HapticFeedback.impactOccurred('medium'); } catch (e) {}
+            }
 
             const numSectors = state.prizes.length;
             const arcSize = (2 * Math.PI) / numSectors;
-            const winningIndex = Math.floor(Math.random() * numSectors);
+            
+            const winningIndex = pickWeightedWinnerIndex();
+            state.prizes[winningIndex].wins = (state.prizes[winningIndex].wins || 0) + 1;
 
             const sectorCenterOffset = winningIndex * arcSize + arcSize / 2;
             const currentNormalized = ((state.currentAngle % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI);
@@ -585,11 +633,11 @@
             if (deltaAngle <= 0) deltaAngle += 2 * Math.PI;
 
             const extraSpins = (6 + Math.floor(Math.random() * 3)) * 2 * Math.PI;
-            const jitter = (Math.random() - 0.5) * (arcSize * 0.55);
+            const jitter = (Math.random() - 0.5) * (arcSize * 0.35);
             const totalRotation = extraSpins + deltaAngle + jitter;
 
             const startAngle = state.currentAngle;
-            const duration = 4800;
+            const duration = 4500;
             const startTime = performance.now();
             let lastSectorPassed = Math.floor(startAngle / arcSize);
 
@@ -633,14 +681,18 @@
             void wheelPointer.offsetWidth;
             wheelPointer.classList.add('ticker-tick');
             playTickSound();
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged();
+            if (tg && tg.HapticFeedback) {
+                try { tg.HapticFeedback.selectionChanged(); } catch (e) {}
+            }
         }
 
         function handleWin(prize, promoCodeUsed) {
             playWinFanfare();
             launchConfetti();
 
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('success');
+            if (tg && tg.HapticFeedback) {
+                try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {}
+            }
 
             winModalIcon.textContent = prize.icon || '🎁';
             winPrizeTitle.textContent = prize.label;
@@ -659,7 +711,7 @@
             const rawCode = promoInput.value.trim().toUpperCase();
 
             if (!rawCode) {
-                showInputError('Введите новогодний промокод или нажмите вставку кода');
+                showInputError('Введите новогодний промокод для запуска');
                 return;
             }
 
@@ -684,28 +736,28 @@
             inputWrapper.classList.remove('shake-error');
             void inputWrapper.offsetWidth;
             inputWrapper.classList.add('shake-error');
-            if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred('error');
+            if (tg && tg.HapticFeedback) {
+                try { tg.HapticFeedback.notificationOccurred('error'); } catch (e) {}
+            }
         }
 
         function setControlsLocked(locked) {
             spinActionBtn.disabled = locked;
-            demoTestSpinBtn.disabled = locked;
+            if (demoTestSpinBtn) demoTestSpinBtn.disabled = locked;
             promoInput.disabled = locked;
-            fillDemoBtn.disabled = locked;
+            if (fillDemoBtn) fillDemoBtn.disabled = locked;
         }
 
-        /* Системы анимации снега и праздничного конфетти */
         const confettiCanvas = document.getElementById('confettiCanvas');
         const cCtx = confettiCanvas.getContext('2d');
         let confettiParticles = [];
         let snowParticles = [];
-        let animationRunning = false;
 
         function initSnow() {
             confettiCanvas.width = window.innerWidth;
             confettiCanvas.height = window.innerHeight;
             snowParticles = [];
-            const count = 75; // Количество падающих снежинок
+            const count = 75;
             for (let i = 0; i < count; i++) {
                 snowParticles.push({
                     x: Math.random() * confettiCanvas.width,
@@ -739,7 +791,6 @@
         function updateAnimationLoop() {
             cCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
 
-            // 1. Рендер и обновление падающего снега
             snowParticles.forEach(p => {
                 p.y += p.speed;
                 p.angle += p.spinSpeed;
@@ -761,8 +812,8 @@
                 cCtx.restore();
             });
 
-            // 2. Рендер и обновление конфетти при выигрыше
-            confettiParticles.forEach((p, index) => {
+            for (let index = confettiParticles.length - 1; index >= 0; index--) {
+                const p = confettiParticles[index];
                 p.x += p.vx;
                 p.y += p.vy;
                 p.vy += 0.38;
@@ -779,7 +830,7 @@
                 } else {
                     confettiParticles.splice(index, 1);
                 }
-            });
+            }
 
             requestAnimationFrame(updateAnimationLoop);
         }
@@ -787,20 +838,61 @@
         const settingsDrawer = document.getElementById('settingsDrawer');
         const prizesEditorList = document.getElementById('prizesEditorList');
 
+        function updateTotalChanceUI() {
+            const chanceInputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
+            let total = 0;
+            chanceInputs.forEach(inp => {
+                const val = String(inp.value).replace(',', '.');
+                total += parseFloat(val) || 0;
+            });
+            total = Math.round(total * 100) / 100;
+
+            const badge = document.getElementById('totalChanceBadge');
+            const warning = document.getElementById('chanceWarning');
+            const applyBtn = document.getElementById('applySettingsBtn');
+
+            badge.textContent = `${total}%`;
+            if (Math.abs(total - 100) < 0.01) {
+                badge.className = 'text-emerald-400 font-extrabold';
+                warning.classList.add('hidden');
+                applyBtn.disabled = false;
+                applyBtn.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                badge.className = 'text-rose-400 font-extrabold';
+                warning.textContent = `Сумма процентов сейчас ${total}%. Должно быть ровно 100%!`;
+                warning.classList.remove('hidden');
+                applyBtn.disabled = true;
+                applyBtn.classList.add('opacity-50', 'pointer-events-none');
+            }
+        }
+
         function renderPrizesEditor() {
             prizesEditorList.innerHTML = '';
             state.prizes.forEach((prize, index) => {
                 const row = document.createElement('div');
-                row.className = 'flex items-center gap-2 bg-white/5 p-2 rounded-xl border border-white/10';
+                row.className = 'flex items-center gap-1.5 bg-white/5 p-2 rounded-xl border border-white/10';
                 row.innerHTML = `
-                    <span class="w-6 text-center text-xs font-bold text-slate-400">${index + 1}</span>
+                    <span class="w-4 text-center text-xs font-bold text-slate-400">${index + 1}</span>
+                    <div class="relative flex items-center w-16 shrink-0">
+                        <input type="number" min="0" max="100" step="0.5" data-idx="${index}" data-field="chance" value="${prize.chance}" 
+                            class="w-full bg-slate-950 border border-amber-400/40 rounded-lg pl-2 pr-5 py-1.5 text-xs font-bold text-amber-300 outline-none focus:border-amber-400 text-right">
+                        <span class="absolute right-1.5 text-[10px] font-bold text-slate-400 pointer-events-none">%</span>
+                    </div>
                     <input type="text" data-idx="${index}" data-field="icon" value="${prize.icon}" maxlength="2" 
-                        class="w-10 text-center bg-slate-950 border border-white/15 rounded-lg py-1.5 text-sm outline-none focus:border-amber-400">
+                        class="w-9 shrink-0 text-center bg-slate-950 border border-white/15 rounded-lg py-1.5 text-sm outline-none focus:border-amber-400">
                     <input type="text" data-idx="${index}" data-field="label" value="${prize.label}" maxlength="24" 
-                        class="flex-1 bg-slate-950 border border-white/15 rounded-lg px-3 py-1.5 text-xs font-medium text-white outline-none focus:border-amber-400">
+                        class="flex-1 min-w-0 bg-slate-950 border border-white/15 rounded-lg px-2.5 py-1.5 text-xs font-medium text-white outline-none focus:border-amber-400">
+                    <span title="Сколько раз выпало" class="px-1.5 py-0.5 rounded bg-white/10 text-[10px] text-slate-300 font-mono shrink-0">
+                        ${prize.wins || 0}×
+                    </span>
                 `;
                 prizesEditorList.appendChild(row);
             });
+
+            prizesEditorList.querySelectorAll('input[data-field="chance"]').forEach(inp => {
+                inp.addEventListener('input', updateTotalChanceUI);
+            });
+            updateTotalChanceUI();
         }
 
         function applyTheme(themeKey) {
@@ -825,12 +917,15 @@
             drawWheel();
         }
 
-        fillDemoBtn.addEventListener('click', () => {
-            promoInput.value = 'NEWYEAR2027';
-            promoStatusBadge.classList.remove('hidden');
-            statusMessage.textContent = 'Новогодний промокод вставлен! Нажмите кнопку запуска';
-            statusMessage.className = 'text-center text-xs text-emerald-400 mb-3 min-h-[16px]';
-        });
+        if (fillDemoBtn) {
+            fillDemoBtn.addEventListener('click', () => {
+                if (!isUserAdmin()) return;
+                promoInput.value = 'NEWYEAR2027';
+                promoStatusBadge.classList.remove('hidden');
+                statusMessage.textContent = 'Новогодний промокод вставлен! Нажмите кнопку запуска';
+                statusMessage.className = 'text-center text-xs text-emerald-400 mb-3 min-h-[16px]';
+            });
+        }
 
         promoInput.addEventListener('input', () => {
             const val = promoInput.value.trim().toUpperCase();
@@ -842,15 +937,23 @@
         });
 
         spinActionBtn.addEventListener('click', validateAndSpin);
+
         centerSpinTrigger.addEventListener('click', () => {
             if (promoInput.value.trim().length > 0) {
                 validateAndSpin();
-            } else {
+            } else if (isUserAdmin()) {
                 startSpin(null);
+            } else {
+                showInputError('Введите новогодний промокод для запуска');
             }
         });
 
-        demoTestSpinBtn.addEventListener('click', () => startSpin(null));
+        if (demoTestSpinBtn) {
+            demoTestSpinBtn.addEventListener('click', () => {
+                if (!isUserAdmin()) return;
+                startSpin(null);
+            });
+        }
 
         claimPrizeBtn.addEventListener('click', () => {
             winModal.classList.add('hidden');
@@ -877,11 +980,18 @@
             if (state.soundEnabled) playTickSound();
         });
 
-        document.getElementById('openSettingsBtn').addEventListener('click', () => {
-            renderPrizesEditor();
-            settingsDrawer.classList.remove('hidden');
-            settingsDrawer.classList.add('flex');
-        });
+        const openSettingsBtn = document.getElementById('openSettingsBtn');
+        if (openSettingsBtn) {
+            openSettingsBtn.addEventListener('click', (e) => {
+                if (!isUserAdmin()) {
+                    e.stopImmediatePropagation();
+                    return;
+                }
+                renderPrizesEditor();
+                settingsDrawer.classList.remove('hidden');
+                settingsDrawer.classList.add('flex');
+            });
+        }
 
         document.getElementById('closeSettingsBtn').addEventListener('click', () => {
             settingsDrawer.classList.add('hidden');
@@ -898,24 +1008,54 @@
             drawWheel();
         });
 
+        document.getElementById('equalizeChancesBtn').addEventListener('click', () => {
+            const count = state.prizes.length;
+            const equalShare = Math.round((100 / count) * 100) / 100;
+            const chanceInputs = prizesEditorList.querySelectorAll('input[data-field="chance"]');
+            chanceInputs.forEach(inp => {
+                inp.value = equalShare;
+            });
+            updateTotalChanceUI();
+        });
+
         document.getElementById('applySettingsBtn').addEventListener('click', () => {
             const inputs = prizesEditorList.querySelectorAll('input');
             inputs.forEach(inp => {
                 const idx = parseInt(inp.dataset.idx, 10);
                 const field = inp.dataset.field;
-                const val = inp.value.trim();
-                if (val) state.prizes[idx][field] = val;
+                if (field === 'chance') {
+                    const val = String(inp.value).replace(',', '.');
+                    state.prizes[idx].chance = Math.max(0, parseFloat(val) || 0);
+                } else {
+                    const val = inp.value.trim();
+                    if (val) state.prizes[idx][field] = val;
+                }
             });
             drawWheel();
             settingsDrawer.classList.add('hidden');
             settingsDrawer.classList.remove('flex');
         });
 
-        window.addEventListener('load', () => {
+        function applyAdminVisibility() {
+            if (!isUserAdmin()) {
+                if (openSettingsBtn) openSettingsBtn.style.display = 'none';
+                if (fillDemoBtn) fillDemoBtn.style.display = 'none';
+                if (demoTestSpinBtn) demoTestSpinBtn.style.display = 'none';
+            }
+        }
+
+        function initApp() {
+            applyAdminVisibility();
             setupCanvasResolution();
             initSnow();
             updateAnimationLoop();
-        });
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
 
         window.addEventListener('resize', () => {
             setupCanvasResolution();
