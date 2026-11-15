@@ -7,7 +7,7 @@ from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, W
 from aiogram.filters import CommandStart
 
 # Токен вашего бота (можно указать прямо здесь или настроить через переменные окружения в Amvera)
-TOKEN = os.getenv("9270543689:AAHgRIhk0rwYJD7WSgswR3Hx66z28qiXQXA")
+TOKEN = os.getenv("BOT_TOKEN")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
