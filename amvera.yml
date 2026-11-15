@@ -1,0 +1,8 @@
+meta:
+  environment: python
+  toolchain:
+    version: "3.11"
+build:
+  image: ""
+run:
+  scriptName: bot.py
