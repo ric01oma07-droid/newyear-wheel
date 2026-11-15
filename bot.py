@@ -102,6 +102,14 @@ async def handle_web_app_data(message: Message):
         promo = data.get("promo")
 
         if action == "prize_claimed":
+            # Инкрементируем счетчик побед конкретного приза на сервере
+            settings = load_settings()
+            for p in settings["prizes"]:
+                if p["label"] == prize:
+                    p["wins"] = p.get("wins", 0) + 1
+                    break
+            save_settings(settings)
+
             promo_text = f" (Промокод: {promo})" if promo else " (Тестовый запуск)"
             user = message.from_user
             user_mention = f"@{user.username}" if user.username else f"{user.first_name} (ID: {user.id})"
