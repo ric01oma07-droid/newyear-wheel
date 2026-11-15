@@ -13,9 +13,13 @@ import uvicorn
 
 # Настройки
 TOKEN = os.getenv("BOT_TOKEN", "ВАШ_ТОКЕН_БОТА")
-SETTINGS_FILE = "settings.json"
+
+# Сохранение в постоянное хранилище Amvera /data
+DATA_DIR = "/data" if os.path.exists("/data") else "."
+SETTINGS_FILE = os.path.join(DATA_DIR, "settings.json")
 
 DEFAULT_SETTINGS = {
+    "currentTheme": "newyear",
     "validPromos": ["NEWYEAR2027", "SNOW2027", "XMAS", "GIFT", "SANTA"],
     "prizes": [
         { "label": "Скидка 15%", "icon": "🎄", "chance": 30, "wins": 0 },
@@ -23,23 +27,11 @@ DEFAULT_SETTINGS = {
         { "label": "Подарок-сюрприз", "icon": "🎁", "chance": 15, "wins": 0 },
         { "label": "Кэшбэк 500₽", "icon": "✨", "chance": 10, "wins": 0 },
         { "label": "Скидка 25%", "icon": "⭐", "chance": 10, "wins": 0 },
-        { "+300 бонусов": "❄️", "chance": 6, "wins": 0 }, # исправлено ниже в коде структуры
+        { "label": "+300 бонусов", "icon": "❄️", "chance": 6, "wins": 0 },
         { "label": "Билет на елку", "icon": "🎟️", "chance": 3, "wins": 0 },
         { "label": "СУПЕРПРИЗ", "icon": "🎅", "chance": 1, "wins": 0 }
     ]
 }
-
-# Исправленная дефолтная структура призов для безопасности
-DEFAULT_SETTINGS["prizes"] = [
-    { "label": "Скидка 15%", "icon": "🎄", "chance": 30, "wins": 0 },
-    { "label": "Чашка какао", "icon": "☕", "chance": 25, "wins": 0 },
-    { "label": "Подарок-сюрприз", "icon": "🎁", "chance": 15, "wins": 0 },
-    { "label": "Кэшбэк 500₽", "icon": "✨", "chance": 10, "wins": 0 },
-    { "label": "Скидка 25%", "icon": "⭐", "chance": 10, "wins": 0 },
-    { "label": "+300 бонусов", "icon": "❄️", "chance": 6, "wins": 0 },
-    { "label": "Билет на елку", "icon": "🎟️", "chance": 3, "wins": 0 },
-    { "label": "СУПЕРПРИЗ", "icon": "🎅", "chance": 1, "wins": 0 }
-]
 
 def load_settings():
     if os.path.exists(SETTINGS_FILE):
@@ -51,10 +43,10 @@ def load_settings():
     return DEFAULT_SETTINGS
 
 def save_settings(data):
+    os.makedirs(os.path.dirname(SETTINGS_FILE), exist_ok=True)
     with open(SETTINGS_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-# Инициализация бота и FastAPI
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
 app = FastAPI()
@@ -68,6 +60,7 @@ app.add_middleware(
 )
 
 class SettingsModel(BaseModel):
+    currentTheme: str = "newyear"
     validPromos: List[str]
     prizes: List[Dict[str, Any]]
 
@@ -77,13 +70,16 @@ def api_get_settings():
 
 @app.post("/api/settings")
 def api_save_settings(settings: SettingsModel):
-    data = {"validPromos": settings.validPromos, "prizes": settings.prizes}
+    data = {
+        "currentTheme": settings.currentTheme,
+        "validPromos": settings.validPromos,
+        "prizes": settings.prizes
+    }
     save_settings(data)
     return {"status": "success"}
 
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
-    # Укажите здесь вашу реальную ссылку на GitHub Pages
     web_app_url = "https://ric01oma07-droid.github.io/newyear-wheel/"
     
     keyboard = InlineKeyboardMarkup(
@@ -134,7 +130,6 @@ async def main():
     logging.basicConfig(level=logging.INFO)
     port = int(os.getenv("PORT", 8080))
     
-    # Запуск сервера и бота параллельно
     config = uvicorn.Config(app, host="0.0.0.0", port=port, log_level="info")
     server = uvicorn.Server(config)
     
