@@ -499,7 +499,7 @@
             const rimThickness = 12;
             const wheelRadius = outerRadius - rimThickness;
 
-            const theme = THEMES[state.currentTheme];
+            const theme = THEMES[state.currentTheme] || THEMES['newyear'];
             const numSectors = state.prizes.length;
             const arcSize = (2 * Math.PI) / numSectors;
 
@@ -836,8 +836,8 @@
                 if (res.ok) {
                     const data = await res.json();
                     if (data.currentTheme) applyTheme(data.currentTheme);
-                    if (data.validPromos) state.validPromos = data.validPromos;
-                    if (data.prizes) state.prizes = data.prizes;
+                    if (data.validPromos && Array.isArray(data.validPromos)) state.validPromos = data.validPromos;
+                    if (data.prizes && Array.isArray(data.prizes)) state.prizes = data.prizes;
                     drawWheel();
                 }
             } catch (e) {
@@ -953,7 +953,7 @@
 
         function applyTheme(themeKey) {
             state.currentTheme = themeKey;
-            const theme = THEMES[themeKey];
+            const theme = THEMES[themeKey] || THEMES['newyear'];
 
             document.documentElement.style.setProperty('--bg-primary', theme.bgPrimary);
             document.documentElement.style.setProperty('--accent-glow', theme.accentGlow);
@@ -1014,14 +1014,22 @@
         claimPrizeBtn.addEventListener('click', () => {
             winModal.classList.add('hidden');
             winModal.classList.remove('flex');
-            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
+            if (tg) {
                 try {
-                    tg.sendData(JSON.stringify({
+                    const payload = JSON.stringify({
                         action: 'prize_claimed',
                         prize: winPrizeTitle.textContent,
-                        promo: state.lastUsedPromo
-                    }));
-                } catch (e) {}
+                        promo: state.lastUsedPromo || 'Без промокода'
+                    });
+                    if (typeof tg.sendData === 'function') {
+                        tg.sendData(payload);
+                    }
+                } catch (e) {
+                    console.log('Ошибка отправки данных в бот:', e);
+                }
+            }
+            if (tg && typeof tg.close === 'function') {
+                try { tg.close(); } catch(e) {}
             }
         });
 
@@ -1079,19 +1087,19 @@
             inputs.forEach(inp => {
                 const idx = parseInt(inp.dataset.idx, 10);
                 const val = String(inp.value).replace(',', '.');
-                state.prizes[idx].chance = Math.max(0, parseFloat(val) || 0);
+                if (state.prizes[idx]) state.prizes[idx].chance = Math.max(0, parseFloat(val) || 0);
             });
             const textInputs = prizesEditorList.querySelectorAll('input[data-field="label"]');
             textInputs.forEach(inp => {
                 const idx = parseInt(inp.dataset.idx, 10);
                 const val = inp.value.trim();
-                if (val) state.prizes[idx].label = val;
+                if (val && state.prizes[idx]) state.prizes[idx].label = val;
             });
             const iconInputs = prizesEditorList.querySelectorAll('input[data-field="icon"]');
             iconInputs.forEach(inp => {
                 const idx = parseInt(inp.dataset.idx, 10);
                 const val = inp.value.trim();
-                if (val) state.prizes[idx].icon = val;
+                if (val && state.prizes[idx]) state.prizes[idx].icon = val;
             });
 
             drawWheel();
