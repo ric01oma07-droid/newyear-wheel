@@ -328,6 +328,14 @@
             } catch (e) {}
         }
 
+        // Привязка использованных промокодов к конкретному пользователю через localStorage
+        const userId = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) ? tg.initDataUnsafe.user.id : 'guest';
+        const storageKey = `wheel_used_promos_${userId}`;
+        let savedUsedPromos = [];
+        try {
+            savedUsedPromos = JSON.parse(localStorage.getItem(storageKey) || '[]');
+        } catch(e) {}
+
         const THEMES = {
             newyear: {
                 name: 'Зимняя Сказка',
@@ -403,7 +411,7 @@
             currentAngle: 0,
             isSpinning: false,
             soundEnabled: true,
-            usedPromos: new Set(),
+            usedPromos: new Set(savedUsedPromos),
             lastUsedPromo: null
         };
 
@@ -653,6 +661,10 @@
 
                     if (promoCodeUsed) {
                         state.usedPromos.add(promoCodeUsed);
+                        try {
+                            localStorage.setItem(storageKey, JSON.stringify(Array.from(state.usedPromos)));
+                        } catch(e) {}
+
                         promoInput.value = '';
                         promoStatusBadge.classList.add('hidden');
                         statusMessage.textContent = `Промокод ${promoCodeUsed} успешно применен!`;
@@ -1011,23 +1023,25 @@
             });
         }
 
+        // Кнопка забрать подарок (передает данные боту и автоматически закрывает Mini App без сброса пакета)
         claimPrizeBtn.addEventListener('click', () => {
-    winModal.classList.add('hidden');
-    winModal.classList.remove('flex');
-    if (tg && typeof tg.sendData === 'function') {
-        try {
-            const payload = JSON.stringify({
-                action: 'prize_claimed',
-                prize: winPrizeTitle.textContent,
-                promo: state.lastUsedPromo || 'Без промокода'
-            });
-            // tg.sendData автоматически отправляет данные и закрывает мини-приложение
-            tg.sendData(payload);
-        } catch (e) {
-            console.log('Ошибка отправки данных в бот:', e);
-        }
-    }
-});
+            winModal.classList.add('hidden');
+            winModal.classList.remove('flex');
+            if (tg) {
+                try {
+                    const payload = JSON.stringify({
+                        action: 'prize_claimed',
+                        prize: winPrizeTitle.textContent,
+                        promo: state.lastUsedPromo || 'Без промокода'
+                    });
+                    if (typeof tg.sendData === 'function') {
+                        tg.sendData(payload);
+                    }
+                } catch (e) {
+                    console.log('Ошибка отправки данных в бот:', e);
+                }
+            }
+        });
 
         const soundToggleBtn = document.getElementById('soundToggleBtn');
         const soundOnIcon = document.getElementById('soundOnIcon');
