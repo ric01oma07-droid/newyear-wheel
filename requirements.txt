@@ -1,1 +1,4 @@
-aiogram==3.18.0
+aiogram>=3.0
+fastapi
+uvicorn
+pydantic
