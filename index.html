@@ -14,8 +14,8 @@
         }
         .wheel-container {
             position: relative;
-            width: 280px;
-            height: 280px;
+            width: 300px;
+            height: 300px;
         }
         canvas {
             width: 100%;
@@ -31,9 +31,9 @@
             transform: translateX(-50%);
             width: 0;
             height: 0;
-            border-left: 14px solid transparent;
-            border-right: 14px solid transparent;
-            border-top: 26px solid #ef4444;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid #ef4444;
             z-index: 10;
             filter: drop-shadow(0 3px 5px rgba(0,0,0,0.4));
         }
@@ -43,7 +43,7 @@
 
     <!-- Шапка -->
     <header class="w-full max-w-md flex justify-between items-center py-2">
-        <h1 class="text-lg font-bold tracking-wider text-amber-400">🎄 КОЛЕСО УДАЧИ</h1>
+        <h1 class="text-xl font-bold tracking-wider text-amber-400">🎄 КОЛЕСО УДАЧИ</h1>
         <button id="adminBtn" class="hidden bg-slate-800 hover:bg-slate-700 text-xs px-3 py-1.5 rounded-full border border-amber-500/30 text-amber-300 transition">
             ⚙️ Админка
         </button>
@@ -51,19 +51,19 @@
 
     <!-- Основной контент (Колесо) -->
     <main class="flex flex-col items-center justify-center my-auto">
-        <div class="wheel-container my-4">
+        <div class="wheel-container my-6">
             <div class="pointer"></div>
             <canvas id="wheelCanvas" width="600" height="600"></canvas>
         </div>
 
         <!-- Поле промокода -->
-        <div id="promoSection" class="w-full max-w-xs mb-3">
+        <div id="promoSection" class="w-full max-w-xs mb-4">
             <input type="text" id="promoInput" placeholder="Введите промокод (необязательно)" 
                    class="w-full px-4 py-2.5 bg-slate-800 border border-slate-700 rounded-xl text-center text-sm uppercase tracking-widest placeholder:normal-case placeholder:tracking-normal focus:outline-none focus:border-amber-400 transition">
         </div>
 
         <!-- Кнопка вращения -->
-        <button id="spinBtn" class="w-full max-w-xs bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition duration-200">
+        <button id="spinBtn" class="w-full max-w-xs bg-gradient-to-r from-amber-500 to-red-600 hover:from-amber-400 hover:to-red-500 text-white font-bold py-3.5 px-6 rounded-2xl shadow-lg shadow-amber-500/20 active:scale-95 transition duration-200">
             КРУТИТЬ КОЛЕСО 🎁
         </button>
     </main>
@@ -149,6 +149,22 @@
             adminBtn.classList.remove('hidden');
         }
 
+        async function loadSettingsFromServer() {
+            try {
+                const res = await fetch(API_URL);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.prizes && Array.isArray(data.prizes)) state.prizes = data.prizes;
+                    if (data.validPromos) state.validPromos = data.validPromos;
+                    if (data.currentTheme) state.currentTheme = data.currentTheme;
+                }
+            } catch (e) {
+                console.log("Используются локальные настройки");
+            }
+            drawWheel();
+        }
+
+        // Яркие праздничные цвета для секторов колеса
         const wheelColors = ['#b91c1c', '#15803d', '#b45309', '#1d4ed8', '#7e22ce', '#be185d', '#0e7490', '#c2410c'];
 
         function drawWheel() {
@@ -168,6 +184,7 @@
                 ctx.lineTo(300, 300);
                 ctx.fill();
 
+                // Обводка сектора
                 ctx.strokeStyle = "#ffffff";
                 ctx.lineWidth = 2;
                 ctx.stroke();
@@ -179,6 +196,7 @@
                 ctx.fillStyle = "#ffffff";
                 ctx.font = "bold 20px sans-serif";
                 
+                // Обрезка длинного текста
                 let labelText = `${prize.icon} ${prize.label}`;
                 if (labelText.length > 16) labelText = labelText.substring(0, 15) + '..';
                 
@@ -186,30 +204,6 @@
                 ctx.restore();
             });
         }
-
-        // Отрисовываем колесо СРАЗУ, не дожидаясь сети
-        drawWheel();
-
-        // Фоновая загрузка настроек с сервера с таймаутом
-        async function loadSettingsFromServer() {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
-                const res = await fetch(API_URL, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.prizes && Array.isArray(data.prizes)) state.prizes = data.prizes;
-                    if (data.validPromos) state.validPromos = data.validPromos;
-                    if (data.currentTheme) state.currentTheme = data.currentTheme;
-                    drawWheel(); // перерисовываем с новыми данными от сервера
-                }
-            } catch (e) {
-                console.log("Сервер занят или недоступен, работаем на локальных настройках");
-            }
-        }
-        loadSettingsFromServer();
 
         function getWeightedPrize() {
             const totalChance = state.prizes.reduce((sum, p) => sum + p.chance, 0);
@@ -285,10 +279,11 @@
                 promo: promo || null
             };
 
+            // Проверяем, поддерживает ли Telegram отправку данных
             if (tg.sendData) {
                 tg.sendData(JSON.stringify(dataToSend));
             } else {
-                alert("Ошибка: приложение запущено вне чата Telegram.");
+                alert("Ошибка: приложение запущено вне чата Telegram или метод не поддерживается.");
             }
             tg.close();
         });
@@ -362,6 +357,8 @@
                 alert('❌ Нет связи с сервером.');
             }
         });
+
+        loadSettingsFromServer();
     </script>
 </body>
 </html>
