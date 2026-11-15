@@ -15,7 +15,7 @@ dp = Dispatcher()
 @dp.message(CommandStart())
 async def cmd_start(message: Message):
     # ⚠️ ВНИМАНИЕ: Убедитесь, что здесь указана ваша точная и рабочая ссылка на GitHub Pages
-    web_app_url = "https://ric01oma07-droid.github.io/newyear-wheel/"
+    web_app_url = "https://github.com/ric01oma07-droid/newyear-wheel.git"
     
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
