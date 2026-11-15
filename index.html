@@ -310,9 +310,7 @@
     </div>
 
     <script>
-        // ======= НАСТРОЙКА СЕРВЕРА И АДМИНИСТРАТОРА =======
         const API_URL = "https://year-wheel-bot-ric01.msk1.amvera.tech/api/settings";
-
         const ADMIN_IDS = [7008640180];
 
         function isUserAdmin() {
@@ -321,7 +319,6 @@
                 : null;
             return Boolean(tgUser && ADMIN_IDS.includes(tgUser.id));
         }
-        // ==============================================
 
         const tg = (window.Telegram && window.Telegram.WebApp) ? window.Telegram.WebApp : null;
         if (tg) {
@@ -838,6 +835,7 @@
                 const res = await fetch(API_URL);
                 if (res.ok) {
                     const data = await res.json();
+                    if (data.currentTheme) applyTheme(data.currentTheme);
                     if (data.validPromos) state.validPromos = data.validPromos;
                     if (data.prizes) state.prizes = data.prizes;
                     drawWheel();
@@ -854,6 +852,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        currentTheme: state.currentTheme,
                         validPromos: state.validPromos,
                         prizes: state.prizes
                     })
@@ -1099,7 +1098,6 @@
             settingsDrawer.classList.add('hidden');
             settingsDrawer.classList.remove('flex');
 
-            // Сохраняем настройки на сервере для всех пользователей
             await saveSettingsToServer();
         });
 
@@ -1116,7 +1114,7 @@
             setupCanvasResolution();
             initSnow();
             updateAnimationLoop();
-            await loadSettingsFromServer(); // Загружаем актуальные настройки при старте
+            await loadSettingsFromServer();
         }
 
         if (document.readyState === 'loading') {
